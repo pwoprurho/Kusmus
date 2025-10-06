@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Admin Dashboard</h1>
+    <p>Welcome, {{ current_user.username }}!</p>
+    
+    <hr>
+    <h2>Course Management</h2>
+    <a href="{{ url_for('main.create_course') }}">Create New Course</a>
+    <hr>
+
+    <h3>Existing Courses:</h3>
+    {% if courses %}
+        {% for course in courses %}
+            <article>
+                <h4><a href="{{ url_for('main.course_detail', course_id=course.id) }}">{{ course.title }}</a></h4>
+                <p>{{ course.description }}</p>
+                <small>Posted on: {{ course.date_posted.strftime('%Y-%m-%d') }} by {{ course.author.username }}</small>
+                
+                <div>
+                    <a href="{{ url_for('main.update_course', course_id=course.id) }}">Edit</a>
+                    <form action="{{ url_for('main.delete_course', course_id=course.id) }}" method="POST" style="display:inline;">
+                        <input type="submit" value="Delete" onclick="return confirm('Are you sure you want to delete this course and all its lessons?');">
+                    </forM>
+                </div>
+                <br>
+            </article>
+        {% endfor %}
+    {% else %}
+        <p>No courses have been created yet.</p>
+    {% endif %}
+
+{% endblock content %}

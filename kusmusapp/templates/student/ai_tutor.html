@@ -1,0 +1,155 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .messenger-container { display: flex; height: 70vh; border: 1px solid #ccc; font-family: Arial, sans-serif; }
+    .chat-list { width: 30%; border-right: 1px solid #ccc; overflow-y: auto; background-color: #f7f7f7; }
+    .chat-window { width: 70%; display: flex; flex-direction: column; }
+    .chat-header { padding: 10px; border-bottom: 1px solid #ccc; font-weight: bold; background-color: #eee; }
+    .message-area { flex-grow: 1; padding: 10px; overflow-y: auto; background-color: #e5ddd5; }
+    .message-input { padding: 10px; border-top: 1px solid #ccc; background-color: #f0f0f0; }
+    .message-input form { display: flex; gap: 10px; }
+    .message-input input[type="text"] { flex-grow: 1; border-radius: 20px; border: 1px solid #ccc; padding: 10px; }
+    .chat-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
+    .chat-item:hover { background-color: #e8e8e8; }
+    .message { display: flex; margin-bottom: 10px; max-width: 70%; }
+    .sent { margin-left: auto; flex-direction: row-reverse; }
+    .received { margin-right: auto; }
+    .msg-bubble { padding: 8px 12px; border-radius: 8px; }
+    .sent .msg-bubble { background-color: #dcf8c6; }
+    .received .msg-bubble { background-color: #fff; border: 1px solid #eee; }
+    .msg-sender { font-size: 0.8em; font-weight: bold; color: #555; margin-bottom: 4px; }
+    .msg-content { white-space: pre-wrap; word-wrap: break-word; }
+    .msg-content pre { background-color: #2d2d2d; color: #ccc; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
+    .msg-time { font-size: 0.7em; color: #999; text-align: right; margin-top: 4px; }
+</style>
+
+<div class="messenger-container">
+    <div class="chat-list">
+        <div class="chat-item">Kustor_AI (New Chat)</div>
+    </div>
+    <div class="chat-window">
+        <div class="chat-header">Kustor_AI</div>
+        <div class="message-area" id="message-area">
+            <div class="message received">
+                <div class="msg-bubble">
+                    <div class="msg-sender">Kustor_AI</div>
+                    <div class="msg-content">I am ready. Ask me to generate a lesson (e.g., "generate a lesson on python functions").</div>
+                    <div class="msg-time">Now</div>
+                </div>
+            </div>
+        </div>
+        <div class="message-input">
+            <form id="chat-form">
+                <input type="text" id="message-input" autocomplete="off" placeholder="Type your message or command...">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const room = "1"; 
+        const socket = io();
+        const messageArea = document.getElementById('message-area');
+
+        // --- SOCKET EVENT LISTENERS ---
+        socket.on('connect', () => {
+            socket.emit('join', { room: room });
+        });
+
+        // Handles regular, non-streamed messages
+        socket.on('receive_message', (data) => {
+            addMessage(data.sender, data.content, data.timestamp);
+        });
+
+        // Creates the initial AI message bubble when streaming starts
+        socket.on('stream_start', (data) => {
+            createStreamMessage(data.sender);
+        });
+
+        // Appends each new chunk of text to the streaming message bubble
+        socket.on('stream_chunk', (data) => {
+            appendToStreamMessage(data.chunk);
+        });
+
+        // Finalizes the streamed message with its timestamp
+        socket.on('stream_end', (data) => {
+            finalizeStreamMessage(data.timestamp);
+        });
+
+        // --- FORM SUBMISSION ---
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('message-input');
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = input.value;
+            if (message) {
+                // Always display the user's message
+                addMessage("{{ current_user.username }}", message, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                socket.emit('send_message', { room: room, message: message });
+                input.value = '';
+            }
+        });
+        
+        // --- HELPER FUNCTIONS ---
+        function addMessage(sender, content, timestamp) {
+            const messageClass = sender === "{{ current_user.username }}" ? 'sent' : 'received';
+            let formattedContent = formatMarkdown(content);
+
+            const msgHtml = `
+            <div class="message ${messageClass}">
+                <div class="msg-bubble">
+                    <div class="msg-sender">${sender}</div>
+                    <div class="msg-content">${formattedContent}</div>
+                    <div class="msg-time">${timestamp}</div>
+                </div>
+            </div>`;
+            messageArea.innerHTML += msgHtml;
+            scrollToBottom();
+        }
+
+        function createStreamMessage(sender) {
+            const msgHtml = `
+            <div class="message received" id="streaming-message">
+                <div class="msg-bubble">
+                    <div class="msg-sender">${sender}</div>
+                    <div class="msg-content"></div>
+                    <div class="msg-time"></div>
+                </div>
+            </div>`;
+            messageArea.innerHTML += msgHtml;
+            scrollToBottom();
+        }
+
+        function appendToStreamMessage(chunk) {
+            const streamingMsgContent = document.querySelector('#streaming-message .msg-content');
+            if (streamingMsgContent) {
+                streamingMsgContent.innerHTML += formatMarkdown(chunk);
+                scrollToBottom();
+            }
+        }
+
+        function finalizeStreamMessage(timestamp) {
+            const streamingMsg = document.getElementById('streaming-message');
+            if (streamingMsg) {
+                const timeDiv = streamingMsg.querySelector('.msg-time');
+                timeDiv.textContent = timestamp;
+                streamingMsg.id = ''; // Remove the ID so we don't append to it anymore
+            }
+        }
+        
+        function formatMarkdown(text) {
+             return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
+        }
+
+        function scrollToBottom() {
+            messageArea.scrollTop = messageArea.scrollHeight;
+        }
+    });
+</script>
+{% endblock content %}

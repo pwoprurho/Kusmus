@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block content %}
+    <a href="{{ url_for('main.admin_dashboard') }}">&laquo; Back to Dashboard</a>
+    <hr>
+    <h1>{{ course.title }}</h1>
+    <p>{{ course.description }}</p>
+    <hr>
+    <h3>Lessons in this Course</h3>
+    <div>
+        <strong>Add New Lesson:</strong>
+        <a href="{{ url_for('main.add_text_lesson', course_id=course.id) }}">Text</a> |
+        <a href="{{ url_for('main.add_file_lesson', course_id=course.id) }}">File</a> |
+        <a href="{{ url_for('main.add_video_lesson', course_id=course.id) }}">Video</a> |
+        <a href="{{ url_for('main.add_youtube_lesson', course_id=course.id) }}">YouTube</a>
+    </div>
+    <br>
+
+    {% for lesson in course.lessons %}
+        <article>
+            <h4>
+                {% if lesson.lesson_type == 'text' %}<a href="{{ url_for('main.view_lesson', lesson_id=lesson.id) }}">{{ lesson.title }}</a> [Text]
+                {% elif lesson.lesson_type == 'file' %}<a href="{{ url_for('main.uploaded_file', subfolder='lessons/docs', filename=lesson.file_path) }}" target="_blank">{{ lesson.title }}</a> [File]
+                {% else %}{{ lesson.title }} [{{ lesson.lesson_type|title }}]{% endif %}
+            </h4>
+            
+            {% if lesson.lesson_type == 'video' %}
+            <video width="480" height="270" controls>
+              <source src="{{ url_for('main.uploaded_file', subfolder='lessons/videos', filename=lesson.file_path) }}" type="video/mp4">
+            </video>
+            {% elif lesson.lesson_type == 'youtube' %}
+            <iframe width="480" height="270" src="https://www.youtube.com/embed/{{ lesson.file_path }}" frameborder="0" allowfullscreen></iframe>
+            {% endif %}
+            
+            <small>Posted on: {{ lesson.date_posted.strftime('%Y-%m-%d') }}</small>
+
+            <div>
+                <a href="{{ url_for('main.update_lesson', lesson_id=lesson.id) }}">Edit</a>
+                <form action="{{ url_for('main.delete_lesson', lesson_id=lesson.id) }}" method="POST" style="display:inline;">
+                    <input type="submit" value="Delete" onclick="return confirm('Are you sure you want to delete this lesson?');">
+                </form>
+            </div>
+        </article>
+        <hr>
+    {% else %}
+        <p>No lessons have been added to this course yet.</p>
+    {% endfor %}
+{% endblock content %}

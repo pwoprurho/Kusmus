@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block content %}
+    <div>
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+            <fieldset>
+                <legend>{{ legend }}</legend>
+                <div>
+                    {{ form.title.label }}<br>
+                    {{ form.title(size=50) }}<br>
+                    {% for error in form.title.errors %}
+                        <small style="color: red;">{{ error }}</small><br>
+                    {% endfor %}
+                </div>
+                <br>
+                <div>
+                    {{ form.description.label }}<br>
+                    {{ form.description(rows=5, cols=50) }}<br>
+                    {% for error in form.description.errors %}
+                        <small style="color: red;">{{ error }}</small><br>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            <br>
+            <div>
+                {{ form.submit() }}
+            </div>
+        </form>
+    </div>
+{% endblock content %}

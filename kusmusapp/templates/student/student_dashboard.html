@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>My Dashboard</h1>
+    <p>Welcome, {{ current_user.username }}!</p>
+    <hr>
+
+    {# If the user HAS a roadmap, display it #}
+    {% if roadmap %}
+        <h3>Your Roadmap: {{ roadmap.goal }}</h3>
+        {% if roadmap.image_url %}
+            <img src="{{ roadmap.image_url }}" alt="Roadmap Banner" style="width:100%; max-width:600px; border-radius: 8px; margin-bottom: 20px;">
+        {% endif %}
+
+        <h4>Your Steps:</h4>
+        {% for step in roadmap.steps|sort(attribute='step_number') %}
+            <article style="border-left: 3px solid #ccc; padding-left: 15px; margin-bottom: 15px;">
+                <p><strong>Step {{ step.step_number }}: {{ step.title }}</strong> (Status: {{ step.status.replace('_', ' ')|title }})</p>
+                <p>{{ step.description }}</p>
+            </article>
+        {% endfor %}
+    
+    {# If the user DOES NOT have a roadmap, show the initial state #}
+    {% else %}
+        <h3>Your Stats</h3>
+        <ul>
+            <li><strong>Daily Streak:</strong> {{ current_user.streak }} Day(s)</li>
+            <li><strong>Roadmap:</strong> Not Set</li>
+            <li><strong>Steps Taken:</strong> 0</li>
+            <li><strong>Courses Registered:</strong> 0</li>
+        </ul>
+        <hr>
+        <p>Ready to start your journey? Let Kustor_AI build a personalized plan for you.</p>
+        <a href="{{ url_for('main.onboarding') }}">
+            <button>Start with Kustor_AI</button>
+        </a>
+    {% endif %}
+
+{% endblock content %}

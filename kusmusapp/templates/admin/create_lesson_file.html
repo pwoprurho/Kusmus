@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+{% block content %}
+    <a href="{{ url_for('main.course_detail', course_id=course.id) }}">&laquo; Back to Course</a>
+    <hr>
+    <form method="POST" action="" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <fieldset>
+            <legend>Add File Lesson to {{ course.title }}</legend>
+            {{ form.title.label }}<br>{{ form.title(size=50) }}<br><br>
+            {{ form.document.label }}<br>{{ form.document() }}<br><br>
+            {{ form.submit() }}
+        </fieldset>
+    </form>
+{% endblock content %}

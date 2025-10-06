@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title or 'Kusmus Platform' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="{{ url_for('main.home') }}">Kusmus Communications</a> |
+            <a href="{{ url_for('main.about') }}">About</a> |
+            <a href="{{ url_for('main.team') }}">Our Team</a> |
+            <a href="{{ url_for('main.consult') }}">Consultation</a> |
+            <a href="{{ url_for('main.academy_landing') }}" style="font-weight: bold;">Launch Academy</a>
+
+            <div style="float: right;">
+    {% if current_user.is_authenticated %}
+        {# This link will only show up if the logged-in user's role is 'admin' #}
+        {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('main.dashboard') }}">Admin Dashboard</a> |
+            <a href="{{ url_for('main.ai_tutor') }}">AI Tutor</a> |
+        {% endif %}
+        <a href="{{ url_for('main.logout') }}">Logout</a>
+    {% else %}
+        <a href="{{ url_for('main.login') }}">Login</a> | <a href="{{ url_for('main.register') }}">Register</a>
+    {% endif %}
+</div>
+        </nav>
+    </header>
+    <hr>
+    <main>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert-{{ category }}">
+                {{ message }}
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </main>
+    <hr>
+    <footer>
+        <p>&copy; 2025 Oghenerurho for Kusmus Platform. All rights reserved.</p>
+    </footer>
+</body>
+</html>
