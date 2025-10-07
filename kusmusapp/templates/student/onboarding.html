@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Build Your Personalized Roadmap</h1>
+    <p>Answer a few questions and Kustor_AI will generate your learning path.</p>
+    <hr>
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        
+        <div>
+            {{ form.ambition.label }}<br>
+            {{ form.ambition(size=80) }}
+        </div>
+        <br>
+        <div>
+            {{ form.study_hours.label }}<br>
+            {{ form.study_hours }}
+        </div>
+        <br>
+        <div>
+            {{ form.reminder_time.label }} (e.g., 08:00 or 17:30)<br>
+            {{ form.reminder_time }}
+        </div>
+        <br>
+        <div>
+            {{ form.submit() }}
+        </div>
+    </form>
+{% endblock content %}

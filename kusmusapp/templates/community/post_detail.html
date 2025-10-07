@@ -1,0 +1,46 @@
+{% extends "layout.html" %}
+{% block content %}
+    <article>
+        <h1>{{ post.title }}</h1>
+        <small>By {{ post.author.username }} on {{ post.date_posted.strftime('%Y-%m-%d') }}</small>
+        
+        <div class="vote-container" data-post-id="{{ post.id }}">
+            <button class="vote-btn" data-vote-type="coin">🪙</button>
+            <span class="score">{{ post.score }}</span>
+            <button class="vote-btn" data-vote-type="slander">🍅</button>
+        </div>
+
+        <hr>
+        <p>{{ post.content }}</p>
+    </article>
+    <hr>
+    
+    <h3>Comments (Debate)</h3>
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    const voteContainer = document.querySelector('.vote-container');
+    const postId = voteContainer.dataset.postId;
+    
+    voteContainer.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('vote-btn')) {
+            const voteType = e.target.dataset.voteType;
+
+            const response = await fetch(`/post/${postId}/vote`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ vote_type: voteType })
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                
+                // Update the score on the page
+                voteContainer.querySelector('.score').textContent = data.score;
+            } else {
+                console.error('Failed to cast vote');
+            }
+        }
+    });
+});
+</script>
+{% endblock content %}

@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block content %}
+    <a href="{{ url_for('main.course_detail', course_id=module.course_id) }}">&laquo; Back to Course</a>
+    <hr>
+    
+    <div style="background: #f0f0f0; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+        <h3>AI Challenge Generator</h3>
+        <label for="ai-topic">Enter a topic:</label><br>
+        <input type="text" id="ai-topic" size="50" placeholder="e.g., check for palindrome, find the max number in a list">
+        <button id="generate-btn">Generate with AI</button>
+        <p id="ai-status" style="color: #555;"></p>
+    </div>
+
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset>
+            <legend>New Assignment for {{ module.title }}</legend>
+            {{ form.title.label }}<br>{{ form.title(size=50) }}<br><br>
+            {{ form.instructions.label }}<br>{{ form.instructions(rows=10, cols=80) }}<br><br>
+            {{ form.due_date.label }} (YYYY-MM-DD)<br>{{ form.due_date() }}<br><br>
+            
+            <input type="hidden" id="solution_code" name="solution_code">
+            <input type="hidden" id="test_cases" name="test_cases">
+            
+            {{ form.submit() }}
+        </fieldset>
+    </form>
+
+<script>
+document.getElementById('generate-btn').addEventListener('click', async (e) => {
+    e.preventDefault(); // Prevent the main form from submitting
+    const topic = document.getElementById('ai-topic').value;
+    const status = document.getElementById('ai-status');
+    if (!topic) {
+        status.textContent = "Please enter a topic.";
+        return;
+    }
+
+    status.textContent = "Generating with Kustor_AI... please wait.";
+    
+    const response = await fetch("{{ url_for('main.generate_challenge') }}", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ topic: topic })
+    });
+
+    if (!response.ok) {
+        status.textContent = "Error generating challenge. Please check the server logs.";
+        return;
+    }
+
+    const data = await response.json();
+
+    // --- THIS IS THE FIX ---
+    // Populate all the form fields with the clean AI response
+    document.getElementById('title').value = data.title;
+    document.getElementById('instructions').value = data.instructions;
+    document.getElementById('solution_code').value = data.solution_code;
+    document.getElementById('test_cases').value = JSON.stringify(data.test_cases); // Convert test cases array to a JSON string
+    
+    status.textContent = "Challenge generated! Form has been filled out. You can now click 'Create Assignment'.";
+});
+</script>
+{% endblock content %}

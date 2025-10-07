@@ -1,0 +1,26 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>{{ course.title }}</h1>
+    <p>{{ course.description }}</p>
+    <hr>
+
+    <h3>Course Modules</h3>
+    {% for module in course.modules %}
+        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
+            <h4>{{ module.title }}</h4>
+            <ul style="list-style-type: none; padding-left: 10px; margin-top: 10px;">
+                {% for assignment in module.assignments %}
+                    <li style="border-top: 1px dashed #eee; padding-top: 5px; margin-top: 5px;">
+                        <strong>{{ assignment.title }}</strong>
+                        - <a href="{{ url_for('main.solve_assignment', assignment_id=assignment.id) }}">Solve Challenge</a>
+                    </li>
+                {% else %}
+                    <li>No assignments in this module yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% else %}
+        <p>No modules have been created for this course yet.</p>
+    {% endfor %}
+
+{% endblock content %}

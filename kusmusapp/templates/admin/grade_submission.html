@@ -1,0 +1,24 @@
+{% extends "layout.html" %}
+{% block content %}
+    <a href="{{ url_for('main.view_submissions', assignment_id=submission.assignment_id) }}">&laquo; Back to Submissions</a>
+    <hr>
+    <h3>Grading submission from: {{ submission.student.username }}</h3>
+    
+    <h4>Submitted Code:</h4>
+    <pre style="background: #eee; padding: 10px; border: 1px solid #ccc; border-radius: 5px;"><code>{{ submission.content }}</code></pre>
+    <hr>
+
+    <form method="POST" action="">
+        {{ form.hidden_tag() }}
+        <fieldset>
+            <legend>Enter Grade and Feedback</legend>
+            {{ form.grade.label }}<br>
+            {{ form.grade(size=20) }}<br><br>
+
+            {{ form.feedback.label }}<br>
+            {{ form.feedback(rows=8, cols=70) }}<br><br>
+
+            {{ form.submit() }}
+        </fieldset>
+    </form>
+{% endblock content %}

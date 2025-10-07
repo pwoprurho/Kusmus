@@ -1,0 +1,31 @@
+{% extends "layout.html" %}
+{% block content %}
+    <a href="{{ url_for('main.course_detail', course_id=assignment.module.course_id) }}">&laquo; Back to Course</a>
+    <hr>
+    <h1>Submissions for: {{ assignment.title }}</h1>
+    
+    {% if assignment.submissions %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Student</th>
+                    <th>Date Submitted</th>
+                    <th>Grade</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for sub in assignment.submissions %}
+                <tr>
+                    <td>{{ sub.student.username }}</td>
+                    <td>{{ sub.date_submitted.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ sub.grade or 'Not Graded' }}</td>
+                    <td><a href="{{ url_for('main.grade_submission', submission_id=sub.id) }}">View & Grade</a></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No submissions for this assignment yet.</p>
+    {% endif %}
+{% endblock content %}

@@ -14,19 +14,18 @@
             <a href="{{ url_for('main.team') }}">Our Team</a> |
             <a href="{{ url_for('main.consult') }}">Consultation</a> |
             <a href="{{ url_for('main.academy_landing') }}" style="font-weight: bold;">Launch Academy</a>
-
+            
             <div style="float: right;">
-    {% if current_user.is_authenticated %}
-        {# This link will only show up if the logged-in user's role is 'admin' #}
-        {% if current_user.role == 'admin' %}
-            <a href="{{ url_for('main.dashboard') }}">Admin Dashboard</a> |
-            <a href="{{ url_for('main.ai_tutor') }}">AI Tutor</a> |
-        {% endif %}
-        <a href="{{ url_for('main.logout') }}">Logout</a>
-    {% else %}
-        <a href="{{ url_for('main.login') }}">Login</a> | <a href="{{ url_for('main.register') }}">Register</a>
-    {% endif %}
-</div>
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('main.dashboard') }}">Dashboard</a> |
+                    <a href="{{ url_for('main.course_catalog') }}">Courses</a> |
+                    <a href="{{ url_for('main.community') }}">Community</a> |
+                    <a href="{{ url_for('main.ai_tutor') }}">AI Tutor</a> |
+                    <a href="{{ url_for('main.logout') }}">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('main.login') }}">Login</a> | <a href="{{ url_for('main.register') }}">Register</a>
+                {% endif %}
+            </div>
         </nav>
     </header>
     <hr>
@@ -44,7 +43,7 @@
     </main>
     <hr>
     <footer>
-        <p>&copy; 2025 Oghenerurho for Kusmus Platform. All rights reserved.</p>
+        <p>&copy; 2025 Kusmus Platform. All rights reserved.</p>
     </footer>
 </body>
 </html>
