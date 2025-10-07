@@ -10,10 +10,11 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_user, current_user, logout_user, login_required
 from kusmusapp import db
 from kusmusapp.models import (User, Course, Lesson, GeneratedRoadmap, RoadmapStep, 
-                            Module, Assignment, AssignmentSubmission, Post, Comment, Vote, admin_required)
+                            Module, Assignment, AssignmentSubmission, Post, Comment, Vote, ChatSession, admin_required)
 from kusmusapp.forms import (RegistrationForm, LoginForm, CourseForm, 
                            TextLessonForm, FileLessonForm, VideoLessonForm, YouTubeLessonForm, OnboardingForm,
-                           ModuleForm, AssignmentForm, PostForm, CommentForm)
+                           ModuleForm, AssignmentForm, PostForm, CommentForm, GradingForm)
+from sqlalchemy import or_
 
 main = Blueprint('main', __name__)
 
@@ -38,17 +39,51 @@ def get_youtube_id(url):
         if query.path[:3] == '/v/': return query.path.split('/')[2]
     return None
 
+def run_python_code(code_string):
+    """Runs a string of Python code in a secure, isolated Docker container."""
+    try:
+        client = docker.from_env()
+        client.ping()
+    except Exception as e:
+        print(f"!!! DOCKER CONNECTION FAILED: {e}")
+        return {'output': '', 'error': f'Could not connect to Docker service. Error: {e}'}
+    try:
+        container = client.containers.run(
+            'python:3.10-slim', command=['python', '-c', code_string],
+            mem_limit='128m', cpu_shares=128, network_disabled=True, detach=True
+        )
+        result = container.wait(timeout=10)
+        stdout = container.logs(stdout=True, stderr=False).decode('utf-8')
+        stderr = container.logs(stdout=False, stderr=True).decode('utf-8')
+        container.remove()
+        if result['StatusCode'] == 0:
+            return {'output': stdout, 'error': ''}
+        else:
+            return {'output': stdout, 'error': stderr}
+    except Exception as e:
+        if 'container' in locals() and container: container.remove(force=True)
+        return {'output': '', 'error': f'An unexpected error occurred: {e}'}
+
 def grade_python_code(user_code, test_cases_json):
-    client = docker.from_env()
+    """Runs user code against a set of test cases in Docker."""
+    try:
+        client = docker.from_env()
+        client.ping()
+    except Exception as e:
+        print(f"!!! DOCKER CONNECTION FAILED: {e}")
+        return [{'status': 'error', 'details': f'Could not connect to Docker service. Error: {e}'}]
+    
     results = []
     try:
         test_cases = json.loads(test_cases_json)
     except (json.JSONDecodeError, TypeError):
         return [{'status': 'error', 'details': 'Failed to parse test cases for this assignment.'}]
+        
     for i, case in enumerate(test_cases):
         case_input = case.get('input', [])
         expected_output = case.get('expected_output')
         input_str = ", ".join(map(repr, case_input))
+        
         full_script = f"""
 import json
 import sys
@@ -56,13 +91,18 @@ import sys
 try:
     func_name = [name for name, obj in locals().items() if callable(obj) and obj.__module__ == '__main__'][0]
     user_func = locals()[func_name]
+    original_stdout = sys.stdout
+    sys.stdout = sys.stderr
     actual_output = user_func({input_str})
+    sys.stdout = original_stdout
     expected_output = {repr(expected_output)}
     if actual_output == expected_output:
         print(json.dumps({{"status": "pass", "input": {repr(case_input)}, "output": repr(actual_output), "expected": repr(expected_output)}}))
     else:
         print(json.dumps({{"status": "fail", "input": {repr(case_input)}, "output": repr(actual_output), "expected": repr(expected_output)}}))
 except Exception as e:
+    if 'original_stdout' in locals():
+        sys.stdout = original_stdout
     print(json.dumps({{"status": "error", "input": {repr(case_input)}, "details": str(e)}}))
 """
         try:
@@ -74,13 +114,14 @@ except Exception as e:
             stdout = container.logs(stdout=True, stderr=False).decode('utf-8').strip()
             stderr = container.logs(stdout=False, stderr=True).decode('utf-8').strip()
             container.remove()
-            if stderr:
+            if not stdout:
                 results.append({'status': 'error', 'input': case_input, 'details': stderr})
             else:
                 results.append(json.loads(stdout))
         except Exception as e:
             if 'container' in locals() and container: container.remove(force=True)
             results.append({'status': 'error', 'input': case_input, 'details': f'Execution timed out or crashed: {e}'})
+            
     return results
 
 # --- AUTHENTICATION ROUTES ---
@@ -224,11 +265,11 @@ def onboarding():
                 return render_template('student/onboarding.html', title='Create Your Path', form=form)
             genai.configure(api_key=API_KEY)
             text_model = genai.GenerativeModel('models/gemini-2.5-flash')
-            text_prompt = f"..."
+            text_prompt = f"""Generate a 7-step learning roadmap for a user who wants to '{ambition}'. The user can study for {hours} hours a day. Format the output strictly as a numbered list. Each item must start with 'Step X:'. Each step must have a title and a one-sentence description. Example: Step 1: Title of Step 1. A brief description of this step."""
             text_response = text_model.generate_content(text_prompt)
             roadmap_text = text_response.text
             banner_model = genai.GenerativeModel('models/gemini-2.5-flash-image')
-            banner_prompt = f"..."
+            banner_prompt = f"Generate a visually appealing, abstract, motivational banner image for a '{ambition}' tech career roadmap. Style: digital art, futuristic, clean, vibrant colors."
             banner_response = banner_model.generate_content(banner_prompt)
             banner_image_url = banner_response.candidates[0].content.parts[0].uri
             new_roadmap = GeneratedRoadmap(goal=ambition, content=roadmap_text, image_url=banner_image_url, student=current_user)
@@ -263,6 +304,11 @@ def course_catalog():
 def student_course_view(course_id):
     course = Course.query.get_or_404(course_id)
     return render_template('student/student_course_view.html', title=course.title, course=course)
+
+@main.route('/notebook')
+@login_required
+def notebook():
+    return render_template('student/notebook.html', title='Jupyter Notebook')
 
 # --- ADMIN & CONTENT MANAGEMENT ROUTES ---
 @main.route('/ai-tutor')
@@ -513,6 +559,37 @@ def view_lesson(lesson_id):
     lesson = Lesson.query.get_or_404(lesson_id)
     return render_template('admin/view_lesson.html', title=lesson.title, lesson=lesson)
 
+@main.route('/assignment/<int:assignment_id>/submissions')
+@login_required
+@admin_required
+def view_submissions(assignment_id):
+    assignment = Assignment.query.get_or_404(assignment_id)
+    return render_template('admin/view_submissions.html', title='Submissions', assignment=assignment)
+
+@main.route('/submission/<int:submission_id>/grade', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def grade_submission(submission_id):
+    submission = AssignmentSubmission.query.get_or_404(submission_id)
+    form = GradingForm()
+    if form.validate_on_submit():
+        submission.grade = form.grade.data
+        submission.feedback = form.feedback.data
+        db.session.commit()
+        flash('The grade has been submitted.', 'success')
+        return redirect(url_for('main.view_submissions', assignment_id=submission.assignment_id))
+    elif request.method == 'GET':
+        form.grade.data = submission.grade
+        form.feedback.data = submission.feedback
+    return render_template('admin/grade_submission.html', title='Grade Submission', form=form, submission=submission)
+
+@main.route('/run_code_simple', methods=['POST'])
+@login_required
+def run_code_simple():
+    code = request.json.get('code', '')
+    result = run_python_code(code)
+    return jsonify(result)
+
 @main.route('/run_code', methods=['POST'])
 @login_required
 def run_code():
@@ -554,3 +631,57 @@ def submit_assignment(assignment_id):
 @login_required
 def uploaded_file(subfolder, filename):
     return send_from_directory(os.path.join(current_app.root_path, f'uploads/{subfolder}'), filename)
+
+# --- MESSAGING ROUTES ---
+
+
+# --- MESSAGING ROUTES ---
+@main.route('/messages')
+@login_required
+def messages():
+    """Main messenger page. Redirects to the most recent chat or find users page."""
+    # This now works because current_user.chat_sessions is a query object
+    latest_chat = current_user.chat_sessions.order_by(ChatSession.id.desc()).first()
+    if latest_chat:
+        return redirect(url_for('main.chat_view', session_id=latest_chat.id))
+    return redirect(url_for('main.find_users'))
+
+@main.route('/messages/find')
+@login_required
+def find_users():
+    """Page to display all users to start a new chat."""
+    all_users = User.query.filter(User.id != current_user.id).all()
+    return render_template('student/contacts.html', title='Start a New Chat', users=all_users)
+
+@main.route('/messages/view/<int:session_id>')
+@login_required
+def chat_view(session_id):
+    """Displays a specific chat session."""
+    current_chat = ChatSession.query.get_or_404(session_id)
+    if current_user not in current_chat.participants and not current_chat.is_ai_chat:
+        abort(403)
+
+    # This now works because current_user.chat_sessions is a query object
+    all_user_chats = current_user.chat_sessions.order_by(ChatSession.id.desc()).all()
+    
+    return render_template('student/chat.html', 
+                           title='Messages', 
+                           current_chat=current_chat, 
+                           all_chats=all_user_chats)
+
+@main.route('/messages/start/<int:recipient_id>', methods=['POST'])
+@login_required
+def start_chat(recipient_id):
+    """Creates a new chat session if one doesn't already exist, then redirects to it."""
+    recipient = User.query.get_or_404(recipient_id)
+    chat = ChatSession.query.filter(ChatSession.is_ai_chat == False)\
+        .filter(ChatSession.participants.contains(current_user))\
+        .filter(ChatSession.participants.contains(recipient)).first()
+    if not chat:
+        chat = ChatSession(is_ai_chat=False)
+        chat.participants.append(current_user)
+        chat.participants.append(recipient)
+        db.session.add(chat)
+        db.session.commit()
+        flash(f'Chat with {recipient.username} started!', 'success')
+    return redirect(url_for('main.chat_view', session_id=chat.id))

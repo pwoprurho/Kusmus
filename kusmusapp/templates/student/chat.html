@@ -1,0 +1,229 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<style>
+    /* Reset and Font */
+    .messenger-container * {
+        box-sizing: border-box;
+    }
+    .messenger-container {
+        display: flex;
+        height: 80vh;
+        max-height: 800px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: #fff;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Left Panel: Chat List */
+    .chat-list {
+        width: 30%;
+        min-width: 250px;
+        border-right: 1px solid #e0e0e0;
+        display: flex;
+        flex-direction: column;
+        background-color: #f5f6f7;
+    }
+    .chat-list-header {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+    }
+    .chat-list-header input {
+        width: 100%;
+        padding: 8px 12px;
+        border-radius: 20px;
+        border: 1px solid #ddd;
+    }
+    .chat-list-body {
+        overflow-y: auto;
+        flex-grow: 1;
+    }
+    .chat-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        border-bottom: 1px solid #e8e8e8;
+        cursor: pointer;
+        text-decoration: none;
+        color: #333;
+    }
+    .chat-item:hover { background-color: #ebebeb; }
+    .chat-item.active { background-color: #007bff; color: white; }
+    .chat-item .avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        background-color: #ddd;
+        margin-right: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+    }
+    .chat-item .chat-info {
+        overflow: hidden;
+    }
+    .chat-item .chat-name {
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .chat-item.active .chat-name { color: white; }
+    
+    /* Right Panel: Chat Window */
+    .chat-window {
+        width: 70%;
+        display: flex;
+        flex-direction: column;
+    }
+    .chat-header {
+        padding: 15px;
+        border-bottom: 1px solid #e0e0e0;
+        font-weight: 600;
+        font-size: 1.1em;
+    }
+    .message-area {
+        flex-grow: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background-color: #f0f2f5;
+        display: flex;
+        flex-direction: column;
+    }
+    .message-input {
+        padding: 10px 20px;
+        border-top: 1px solid #e0e0e0;
+        background-color: #f5f6f7;
+    }
+    .message-input form { display: flex; gap: 10px; }
+    .message-input input[type="text"] {
+        flex-grow: 1;
+        border-radius: 20px;
+        border: 1px solid #ccc;
+        padding: 10px 15px;
+    }
+
+    /* Message Bubbles */
+    .message { display: flex; margin-bottom: 10px; max-width: 65%; }
+    .sent { align-self: flex-end; }
+    .received { align-self: flex-start; }
+    .msg-bubble {
+        padding: 10px 15px;
+        border-radius: 18px;
+        word-wrap: break-word;
+    }
+    .sent .msg-bubble { background-color: #007bff; color: white; border-bottom-right-radius: 4px; }
+    .received .msg-bubble { background-color: #fff; border: 1px solid #eee; border-bottom-left-radius: 4px; }
+    .msg-sender { display: none; } /* Hide sender name for cleaner look */
+    .msg-content p { margin: 0; }
+    .msg-time { font-size: 0.75em; color: #999; text-align: right; margin-top: 5px; }
+    .sent .msg-time { color: #bee3ff; }
+
+</style>
+
+<div class="messenger-container">
+    <div class="chat-list">
+        <div class="chat-list-header">
+            <input type="search" placeholder="Search chats...">
+        </div>
+        <div class="chat-list-body">
+            {% for chat in all_chats %}
+                <a href="{{ url_for('main.chat_view', session_id=chat.id) }}" class="chat-item {% if chat.id == current_chat.id %}active{% endif %}">
+                    <div class="avatar">
+                        {% if chat.is_ai_chat %}🤖{% else %}👤{% endif %}
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-name">
+                            {% if chat.is_ai_chat %}
+                                Kustor_AI
+                            {% else %}
+                                {% for participant in chat.participants %}
+                                    {% if participant.id != current_user.id %}{{ participant.username }}{% endif %}
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+            <a href="{{ url_for('main.find_users') }}" class="chat-item">
+                <div class="avatar">+</div>
+                <div class="chat-info"><div class="chat-name">Start New Chat</div></div>
+            </a>
+        </div>
+    </div>
+    <div class="chat-window">
+        <div class="chat-header">
+            {% if current_chat.is_ai_chat %}
+                Kustor_AI
+            {% else %}
+                {% for participant in current_chat.participants %}
+                    {% if participant.id != current_user.id %}{{ participant.username }}{% endif %}
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div class="message-area" id="message-area">
+            {% for msg in current_chat.messages %}
+                <div class="message {% if msg.sender_id == current_user.id %}sent{% else %}received{% endif %}">
+                    <div class="msg-bubble">
+                        <div class="msg-content">{{ msg.content|safe }}</div>
+                        <div class="msg-time">{{ msg.timestamp.strftime('%H:%M') }}</div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="message-input">
+            <form id="chat-form">
+                <input type="text" id="message-input" autocomplete="off" placeholder="Type your message...">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block scripts %}
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- THIS SCRIPT LOGIC IS UNCHANGED ---
+        const room = "{{ current_chat.id }}"; 
+        const socket = io();
+        const messageArea = document.getElementById('message-area');
+
+        messageArea.scrollTop = messageArea.scrollHeight;
+
+        socket.on('connect', () => {
+            socket.emit('join', { room: room });
+        });
+
+        socket.on('receive_message', (data) => {
+            const messageClass = data.sender === "{{ current_user.username }}" ? 'sent' : 'received';
+            
+            const msgHtml = `
+            <div class="message ${messageClass}">
+                <div class="msg-bubble">
+                    <div class="msg-content">${data.content}</div>
+                    <div class="msg-time">${data.timestamp}</div>
+                </div>
+            </div>
+            `;
+            messageArea.innerHTML += msgHtml;
+            messageArea.scrollTop = messageArea.scrollHeight;
+        });
+
+        const form = document.getElementById('chat-form');
+        const input = document.getElementById('message-input');
+        
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const message = input.value;
+            if (message) {
+                socket.emit('send_message', { room: room, message: message });
+                input.value = '';
+            }
+        });
+    });
+</script>
+{% endblock scripts %}

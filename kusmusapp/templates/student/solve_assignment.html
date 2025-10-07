@@ -4,11 +4,28 @@
     .ide-container { display: flex; height: 80vh; gap: 10px; font-family: sans-serif; }
     .instructions { width: 40%; overflow-y: auto; border: 1px solid #ccc; padding: 15px; border-radius: 5px; background: #f9f9f9; }
     .editor-container { width: 60%; display: flex; flex-direction: column; }
-    #code-editor { flex-grow: 1; font-family: monospace; font-size: 14px; border: 1px solid #ccc; border-radius: 5px; padding: 10px; }
-    #output-container { height: 250px; background-color: #f5f5f5; border: 1px solid #ccc; padding: 10px; overflow-y: auto; font-family: monospace; margin-top: 10px; border-radius: 5px; }
+    .CodeMirror { flex-grow: 1; border: 1px solid #ccc; border-radius: 5px; }
+    
+    /* --- CSS CHANGE FOR RESIZABLE RESULTS AREA --- */
+    #output-container {
+        height: 250px; /* Initial height */
+        min-height: 100px; /* Minimum height */
+        resize: vertical; /* Allow vertical resizing */
+        overflow: auto; /* Add scrollbars if content overflows */
+        background-color: #f5f5f5;
+        border: 1px solid #ccc;
+        padding: 10px;
+        font-family: monospace;
+        margin-top: 10px;
+        border-radius: 5px;
+    }
+
     .button-group { margin: 10px 0; display: flex; gap: 10px; }
     .button-group button, .button-group input { padding: 10px 15px; border-radius: 5px; border: none; cursor: pointer; font-weight: bold; }
-    #run-button { background-color: #007bff; color: white; }
+    #run-scratchpad-btn { background-color: #ffc107; color: black; } /* Style for the new button */
+    #run-tests-btn { background-color: #007bff; color: white; }
+    
+    /* Other styles are unchanged */
     .result-item { border-bottom: 1px solid #eee; padding: 8px 0; }
     .result-pass { color: #28a745; font-weight: bold; }
     .result-fail { color: #dc3545; font-weight: bold; }
@@ -27,43 +44,79 @@
             <textarea id="code-editor" name="code">{{ starter_code or assignment.solution_code }}</textarea>
             
             <div class="button-group">
-                <button id="run-button" type="button">Run Tests</button>
+                <button id="run-scratchpad-btn" type="button">Run as Scratchpad</button>
+                <button id="run-tests-btn" type="button">Run Tests</button>
                 <input type="submit" value="Submit Assignment for Grading" style="background-color: #28a745; color: white;">
             </div>
         </form>
 
         <h3>Results: <span id="summary-text"></span></h3>
-        <div id="output-container">Click "Run Tests" to check your code.</div>
+        <div id="output-container">Click a "Run" button to see the results.</div>
     </div>
 </div>
+{% endblock content %}
 
+{% block scripts %}
 <script>
-    document.getElementById('run-button').addEventListener('click', function() {
-        var editor = document.getElementById('code-editor');
-        var outputContainer = document.getElementById('output-container');
-        var summaryText = document.getElementById('summary-text');
+    // Initialize CodeMirror on the textarea
+    var editor = CodeMirror.fromTextArea(document.getElementById('code-editor'), {
+        lineNumbers: true,
+        mode: 'python',
+        theme: 'dracula',
+        indentUnit: 4
+    });
+
+    const outputContainer = document.getElementById('output-container');
+    const summaryText = document.getElementById('summary-text');
+
+    // --- NEW LOGIC FOR SCRATCHPAD BUTTON ---
+    document.getElementById('run-scratchpad-btn').addEventListener('click', function() {
+        outputContainer.innerHTML = 'Running...';
+        summaryText.textContent = 'Scratchpad';
         
+        const userCode = editor.getValue();
+        
+        fetch("{{ url_for('main.run_code_simple') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: userCode })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.error) {
+                outputContainer.innerHTML = '<span style="color: red;">' + result.error + '</span>';
+            } else {
+                outputContainer.textContent = result.output;
+            }
+        })
+        .catch(error => {
+            outputContainer.innerHTML = 'An error occurred while running the code.';
+            console.error('Fetch error:', error);
+        });
+    });
+
+
+    // --- EXISTING LOGIC FOR "RUN TESTS" BUTTON ---
+    document.getElementById('run-tests-btn').addEventListener('click', function() {
         outputContainer.innerHTML = 'Running tests...';
         summaryText.textContent = '';
         
+        var userCode = editor.getValue();
+        
         fetch("{{ url_for('main.run_code') }}", {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
-                code: editor.value,
+                code: userCode,
                 assignment_id: "{{ assignment.id }}"
             })
         })
         .then(function(response) {
-            if (!response.ok) {
-                throw new Error('HTTP error! status: ' + response.status);
-            }
+            if (!response.ok) { throw new Error('HTTP error! status: ' + response.status); }
             return response.json();
         })
         .then(function(data) {
-            outputContainer.innerHTML = ''; // Clear the container
+            outputContainer.innerHTML = '';
             
             if (data.summary) {
                 summaryText.textContent = data.summary.passed + ' / ' + data.summary.total + ' Passed';
@@ -73,17 +126,12 @@
                 data.results.forEach(function(res, index) {
                     var resultDiv = document.createElement('div');
                     resultDiv.className = 'result-item';
-                    
                     var html = '';
                     if (res.status === 'pass') {
                         html += '<div class="result-pass">Test Case #' + (index + 1) + ': Passed</div>';
                     } else if (res.status === 'fail') {
                         html += '<div class="result-fail">Test Case #' + (index + 1) + ': Failed</div>';
-                        html += '<div class="result-details">' +
-                                    'Input: ' + res.input + '<br>' +
-                                    'Your Output: ' + res.output + '<br>' +
-                                    'Expected: ' + res.expected +
-                                 '</div>';
+                        html += '<div class="result-details">' + 'Input: ' + res.input + '<br>' + 'Your Output: ' + res.output + '<br>' + 'Expected: ' + res.expected + '</div>';
                     } else {
                         html += '<div class="result-error">Test Case #' + (index + 1) + ': Error</div>';
                         html += '<div class="result-details">' + res.details + '</div>';
@@ -101,4 +149,4 @@
         });
     });
 </script>
-{% endblock content %}
+{% endblock scripts %}

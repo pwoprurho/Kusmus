@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .cell { border: 1px solid #ddd; border-radius: 5px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .cell-input-area { display: flex; align-items: flex-start; }
+    .cell-prompt { font-family: monospace; font-size: 13px; color: #303f9f; padding: 10px 0; user-select: none; }
+    .input-prompt { min-width: 60px; text-align: right; padding-right: 10px; }
+    .editor-wrapper { flex-grow: 1; border: 1px solid #cfcfcf; border-radius: 4px; }
+    .notebook-editor .CodeMirror { border: none; height: auto; }
+    .cell-toolbar { margin-left: 60px; padding: 5px 0; }
+    .cell-toolbar button { background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; cursor: pointer; }
+    .cell-output-area { display: flex; align-items: flex-start; margin-top: 5px; }
+    .output-prompt { min-width: 60px; text-align: right; padding-right: 10px; font-family: monospace; font-size: 13px; color: #d32f2f;}
+    .cell-output { flex-grow: 1; background: #f9f9f9; padding: 10px; min-height: 20px; font-family: monospace; white-space: pre-wrap; color: #333; border: 1px solid #eee; border-radius: 4px;}
+    .cell-output.error { color: #d32f2f; }
+    .markdown-input-area { display: block; }
+    .markdown-preview { padding: 10px; display: none; } /* Hidden by default */
+</style>
+
+<h1>My Notebook</h1>
+<p>An exploratory environment for your code and notes. Use the "Run" button in each cell to execute it.</p>
+<button id="add-code-btn">Add Code Cell</button>
+<button id="add-markdown-btn">Add Markdown Cell</button>
+<hr>
+
+<div id="notebook-container">
+    </div>
+
+{% endblock content %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const notebookContainer = document.getElementById('notebook-container');
+        const addCodeBtn = document.getElementById('add-code-btn');
+        const addMarkdownBtn = document.getElementById('add-markdown-btn');
+        let cellCounter = 0;
+
+        function createNewCodeCell() {
+            cellCounter++;
+            const cellId = 'cell-' + cellCounter;
+
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'cell code-cell';
+            cellDiv.innerHTML = `
+                <div class="cell-input-area">
+                    <div class="cell-prompt input-prompt">In [${cellCounter}]:</div>
+                    <div class="editor-wrapper notebook-editor">
+                        <textarea id="${cellId}-editor"></textarea>
+                    </div>
+                </div>
+                <div class="cell-toolbar">
+                    <button class="run-cell-btn">Run</button>
+                </div>
+                <div class="cell-output-area" id="${cellId}-output-area" style="display: none;">
+                    <div class="cell-prompt output-prompt">Out[${cellCounter}]:</div>
+                    <div class="cell-output" id="${cellId}-output"></div>
+                </div>
+            `;
+            notebookContainer.appendChild(cellDiv);
+
+            const editor = CodeMirror.fromTextArea(document.getElementById(`${cellId}-editor`), {
+                lineNumbers: true, mode: 'python', theme: 'dracula', indentUnit: 4
+            });
+
+            cellDiv.querySelector('.run-cell-btn').addEventListener('click', function() {
+                const outputArea = document.getElementById(`${cellId}-output-area`);
+                const outputDiv = document.getElementById(`${cellId}-output`);
+                outputDiv.textContent = 'Running...';
+                outputDiv.classList.remove('error');
+                outputArea.style.display = 'flex';
+
+                fetch("{{ url_for('main.run_code_simple') }}", {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: editor.getValue() })
+                })
+                .then(function(response) {
+                    console.log("--- RAW SERVER RESPONSE ---");
+                    // Clone the response so we can read it twice (once as text, once as json)
+                    return response.clone().text().then(function(text) {
+                        console.log(text); // Log the raw text for debugging
+                        return response.json(); // Now try to parse as JSON
+                    });
+                })
+                .then(function(result) {
+                    console.log("--- PARSED JSON DATA ---");
+                    console.log(result);
+                    if (result.error) {
+                        outputDiv.textContent = result.error;
+                        outputDiv.classList.add('error');
+                    } else {
+                        outputDiv.textContent = result.output;
+                    }
+                })
+                .catch(function(error) {
+                    outputDiv.textContent = 'An error occurred. Check the console (F12) for details.';
+                    outputDiv.classList.add('error');
+                    console.error('Error:', error);
+                });
+            });
+        }
+
+        function createNewMarkdownCell() {
+            cellCounter++;
+            const cellId = 'cell-' + cellCounter;
+
+            const cellDiv = document.createElement('div');
+            cellDiv.className = 'cell markdown-cell';
+            cellDiv.innerHTML = `
+                <div class="cell-input-area markdown-input-area" id="${cellId}-input-area">
+                    <div class="cell-prompt input-prompt" style="visibility: hidden;">In [ ]:</div>
+                    <div class="editor-wrapper">
+                        <textarea id="${cellId}-editor" class="markdown-input" placeholder="Type Markdown here..."></textarea>
+                    </div>
+                </div>
+                <div class="cell-toolbar">
+                    <button class="run-cell-btn">Run</button>
+                </div>
+                <div class="markdown-preview" id="${cellId}-preview"></div>
+            `;
+            notebookContainer.appendChild(cellDiv);
+            
+            const textarea = document.getElementById(`${cellId}-editor`);
+            const preview = document.getElementById(`${cellId}-preview`);
+            const inputArea = document.getElementById(`${cellId}-input-area`);
+            
+            cellDiv.querySelector('.run-cell-btn').addEventListener('click', function() {
+                preview.innerHTML = marked.parse(textarea.value);
+                inputArea.style.display = 'none'; // Hide editor
+                preview.style.display = 'block'; // Show preview
+            });
+
+            preview.addEventListener('dblclick', function() {
+                inputArea.style.display = 'flex'; // Show editor
+                preview.style.display = 'none'; // Hide preview
+            });
+        }
+
+        createNewCodeCell();
+        addCodeBtn.addEventListener('click', createNewCodeCell);
+        addMarkdownBtn.addEventListener('click', createNewMarkdownCell);
+    });
+</script>
+{% endblock scripts %}

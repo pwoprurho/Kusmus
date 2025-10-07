@@ -5,22 +5,22 @@
     <h1>Submissions for: {{ assignment.title }}</h1>
     
     {% if assignment.submissions %}
-        <table>
+        <table style="width: 100%; border-collapse: collapse;">
             <thead>
-                <tr>
-                    <th>Student</th>
-                    <th>Date Submitted</th>
-                    <th>Grade</th>
-                    <th>Action</th>
+                <tr style="text-align: left; border-bottom: 2px solid black;">
+                    <th style="padding: 8px;">Student</th>
+                    <th style="padding: 8px;">Date Submitted</th>
+                    <th style="padding: 8px;">Grade</th>
+                    <th style="padding: 8px;">Action</th>
                 </tr>
             </thead>
             <tbody>
             {% for sub in assignment.submissions %}
-                <tr>
-                    <td>{{ sub.student.username }}</td>
-                    <td>{{ sub.date_submitted.strftime('%Y-%m-%d %H:%M') }}</td>
-                    <td>{{ sub.grade or 'Not Graded' }}</td>
-                    <td><a href="{{ url_for('main.grade_submission', submission_id=sub.id) }}">View & Grade</a></td>
+                <tr style="border-bottom: 1px solid #ccc;">
+                    <td style="padding: 8px;">{{ sub.student.username }}</td>
+                    <td style="padding: 8px;">{{ sub.date_submitted.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td style="padding: 8px;">{{ sub.grade or 'Not Graded' }}</td>
+                    <td style="padding: 8px;"><a href="{{ url_for('main.grade_submission', submission_id=sub.id) }}">View & Grade</a></td>
                 </tr>
             {% endfor %}
             </tbody>

@@ -80,7 +80,7 @@ class Assignment(db.Model):
     module_id = db.Column(db.Integer, db.ForeignKey('module.id'), nullable=False)
     solution_code = db.Column(db.Text, nullable=True)
     test_cases = db.Column(db.Text, nullable=True)
-    submissions = db.relationship('AssignmentSubmission', backref='assignment', lazy=True)
+    submissions = db.relationship('AssignmentSubmission', backref='assignment', lazy=True, cascade="all, delete-orphan")
 
 class AssignmentSubmission(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -126,8 +126,11 @@ class ChatSession(db.Model):
     session_name = db.Column(db.String(100), nullable=True)
     is_ai_chat = db.Column(db.Boolean, default=False)
     messages = db.relationship('ChatMessage', backref='session', lazy=True, cascade="all, delete-orphan")
+    # --- THIS IS THE FIX ---
+    # lazy='dynamic' returns a query object, so we can use .order_by() on it
     participants = db.relationship('User', secondary=chat_participants, lazy='subquery',
-                                   backref=db.backref('chat_sessions', lazy=True))
+                                   backref=db.backref('chat_sessions', lazy='dynamic'))
+
 class ChatMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.Text, nullable=False)

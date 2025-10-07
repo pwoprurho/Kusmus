@@ -1,0 +1,16 @@
+{
+    "name": "Kusmus Platform Dev Environment",
+    "build": {
+        "dockerfile": "Dockerfile"
+    },
+    "postCreateCommand": "sudo usermod -aG docker codespace",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python"
+            ]
+        }
+    },
+    "forwardPorts": [5000, 6333],
+    "runArgs": ["--init"]
+}

@@ -1,0 +1,16 @@
+{% extends "layout.html" %}
+{% block content %}
+    <h1>Start a New Conversation</h1>
+    <p>Select a user to start a private chat.</p>
+    <hr>
+    
+    {% for user in users %}
+        <div style="padding: 10px; border-bottom: 1px solid #eee;">
+            <span>{{ user.username }}</span>
+            <form action="{{ url_for('main.start_chat', recipient_id=user.id) }}" method="POST" style="display: inline; float: right;">
+                <input type="submit" value="Message">
+            </form>
+        </div>
+    {% endfor %}
+
+{% endblock content %}
