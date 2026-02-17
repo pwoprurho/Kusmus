@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS public.users (
     age INTEGER,
     study_reminder_time TEXT,
     daily_study_hours NUMERIC DEFAULT 0,
+    phone_number TEXT,
     avatar_url TEXT,
     wallpaper_url TEXT,
     is_admin BOOLEAN DEFAULT FALSE,
@@ -163,3 +164,6 @@ CREATE INDEX IF NOT EXISTS idx_lessons_course_id ON public.lessons(course_id);
 INSERT INTO public.users (username, email, password, role, is_admin)
 VALUES ('admin', 'admin@kusmus.com', 'Ejiro_26', 'admin', TRUE)
 ON CONFLICT (email) DO NOTHING;
+
+-- Notify PostgREST to reload schema cache
+NOTIFY pgrst, 'reload schema';

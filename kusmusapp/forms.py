@@ -9,6 +9,7 @@ class RegistrationForm(FlaskForm):
     full_name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=7, max=15)])
     
     # Location data
     state = SelectField('State', choices=[], validators=[DataRequired()])

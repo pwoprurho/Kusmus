@@ -32,7 +32,7 @@ class User(UserMixin):
     """User data class compatible with Flask-Login."""
     def __init__(self, id=None, username='', email='', password='', role='student',
                  streak=1, study_reminder_time=None, daily_study_hours=None,
-                  full_name='', state='', lga='', gender='', age=None, is_admin=False,
+                  full_name='', phone_number='', state='', lga='', gender='', age=None, is_admin=False,
                   avatar_url=None, wallpaper_url=None):
         self.id = id
         self.username = username
@@ -43,6 +43,7 @@ class User(UserMixin):
         self.study_reminder_time = study_reminder_time
         self.daily_study_hours = daily_study_hours
         self.full_name = full_name
+        self.phone_number = phone_number
         self.state = state
         self.lga = lga
         self.gender = gender
@@ -63,6 +64,7 @@ class User(UserMixin):
             study_reminder_time=data.get('study_reminder_time'),
             daily_study_hours=data.get('daily_study_hours'),
             full_name=data.get('full_name', ''),
+            phone_number=data.get('phone_number', ''),
             state=data.get('state', ''),
             lga=data.get('lga', ''),
             gender=data.get('gender', ''),

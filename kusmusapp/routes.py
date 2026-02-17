@@ -138,6 +138,7 @@ def register():
                 'full_name': form.full_name.data,
                 'username': form.username.data,
                 'email': form.email.data,
+                'phone_number': form.phone_number.data,
                 'password': hashed_pw,
                 'state': form.state.data,
                 'lga': form.lga.data,
@@ -187,11 +188,13 @@ def logout():
 
 @main.route('/')
 def home():
-    return render_template('index.html')
+    # Home now shows the Academy Landing content
+    return academy_landing()
 
 @main.route('/about')
 def about():
-    return render_template('about.html', title='About Us')
+    # About now shows the former index.html content
+    return render_template('index.html', title='About ADC Academy')
 
 @main.route('/team')
 def team():

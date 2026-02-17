@@ -187,3 +187,8 @@ update_chat_schema.py
 init_db.py
 list_models.py
 generate_hash.py
+
+# Supabase Schema
+schema.sql
+add_phone_number.sql
+add_user_customization_columns.sql

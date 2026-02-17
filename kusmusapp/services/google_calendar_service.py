@@ -1,7 +1,4 @@
-import os
-import datetime
-import pickle
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from flask import url_for, session
@@ -14,19 +11,29 @@ class GoogleCalendarService:
         self.credentials_path = credentials_path
 
     def get_flow(self):
-        flow = InstalledAppFlow.from_client_secrets_file(
-            self.credentials_path, SCOPES)
-        # The redirect_uri must match the one configured in the Google Cloud Console
-        flow.redirect_uri = url_for('main.google_calendar_callback', _external=True)
+        flow = Flow.from_client_secrets_file(
+            self.credentials_path, 
+            scopes=SCOPES,
+            redirect_uri=url_for('main.google_calendar_callback', _external=True)
+        )
         return flow
 
     def get_auth_url(self):
         flow = self.get_flow()
-        auth_url, _ = flow.authorization_url(prompt='consent')
+        auth_url, state = flow.authorization_url(
+            access_type='offline',
+            include_granted_scopes='true',
+            prompt='consent'
+        )
+        session['google_auth_state'] = state
         return auth_url
 
     def fetch_token(self, code):
         flow = self.get_flow()
+        # Ensure state matches to prevent CSRF
+        if 'google_auth_state' in session:
+            flow.state = session['google_auth_state']
+        
         flow.fetch_token(code=code)
         credentials = flow.credentials
         return credentials

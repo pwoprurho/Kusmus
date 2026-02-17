@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title or 'ADC Launch Academy' }}</title>
+    <title>{{ title or 'ADC Academy' }}</title>
     <!-- Modern Typography -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,7 +37,7 @@
             </div>
             <div class="nav-links">
                 <a href="{{ url_for('main.home') }}">Home</a>
-                <a href="{{ url_for('main.academy_landing') }}">Academy</a>
+                <a href="{{ url_for('main.about') }}">About</a>
                 {% if current_user.is_authenticated %}
                 <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
                 {% if current_user.role == 'admin' %}
