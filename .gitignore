@@ -187,5 +187,3 @@ update_chat_schema.py
 init_db.py
 list_models.py
 generate_hash.py
-.env
-.env
