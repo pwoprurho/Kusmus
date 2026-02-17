@@ -1,0 +1,22 @@
+# Logs
+logs
+*.log
+
+# dotenv environment variable files
+.env
+
+# Temporary folders
+tmp/
+temp/
+
+# VSCode settings
+.vscode/
+
+# Python cache files
+__pycache__/
+
+# Migration files and SQLite database
+migrations/
+*.sqlite3
+.db
+instance/

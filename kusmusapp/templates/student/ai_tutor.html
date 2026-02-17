@@ -1,47 +1,478 @@
 {% extends "layout.html" %}
 {% block content %}
+
+
 <style>
-    .messenger-container { display: flex; height: 70vh; border: 1px solid #ccc; font-family: Arial, sans-serif; }
-    .chat-list { width: 30%; border-right: 1px solid #ccc; overflow-y: auto; background-color: #f7f7f7; }
-    .chat-window { width: 70%; display: flex; flex-direction: column; }
-    .chat-header { padding: 10px; border-bottom: 1px solid #ccc; font-weight: bold; background-color: #eee; }
-    .message-area { flex-grow: 1; padding: 10px; overflow-y: auto; background-color: #e5ddd5; }
-    .message-input { padding: 10px; border-top: 1px solid #ccc; background-color: #f0f0f0; }
-    .message-input form { display: flex; gap: 10px; }
-    .message-input input[type="text"] { flex-grow: 1; border-radius: 20px; border: 1px solid #ccc; padding: 10px; }
-    .chat-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; }
-    .chat-item:hover { background-color: #e8e8e8; }
-    .message { display: flex; margin-bottom: 10px; max-width: 70%; }
-    .sent { margin-left: auto; flex-direction: row-reverse; }
-    .received { margin-right: auto; }
-    .msg-bubble { padding: 8px 12px; border-radius: 8px; }
-    .sent .msg-bubble { background-color: #dcf8c6; }
-    .received .msg-bubble { background-color: #fff; border: 1px solid #eee; }
-    .msg-sender { font-size: 0.8em; font-weight: bold; color: #555; margin-bottom: 4px; }
-    .msg-content { white-space: pre-wrap; word-wrap: break-word; }
-    .msg-content pre { background-color: #2d2d2d; color: #ccc; padding: 10px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
-    .msg-time { font-size: 0.7em; color: #999; text-align: right; margin-top: 4px; }
+    /* --- WhatsApp Dark/Light Theme System --- */
+    :root {
+        --wa-teal: #128C7E;
+        --wa-bg: #E5DDD5;
+        --wa-sent: #DCF8C6;
+        --wa-received: #FFFFFF;
+        --wa-text: #111111;
+        --wa-muted: #667781;
+        --wa-sidebar-bg: #FFFFFF;
+        --wa-sidebar-hover: #F5F6F6;
+        --gemini-sparkle: #1a73e8;
+        --gemini-bg: #f0f4f9;
+        --wa-header: #008069;
+    }
+
+    .messenger-wrapper {
+        display: flex;
+        height: 85vh;
+        max-width: 1200px;
+        margin: 1rem auto;
+        background: var(--wa-bg);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Sidebar */
+    .sidebar {
+        width: 300px;
+        background: var(--wa-sidebar-bg);
+        border-right: 1px solid #D1D7DB;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .sidebar-header {
+        background: #F0F2F5;
+        padding: 10px 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #E9EDEF;
+    }
+
+    .sidebar-content {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .session-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #F5F6F6;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: background 0.2s;
+    }
+
+    .session-item:hover {
+        background: var(--wa-sidebar-hover);
+    }
+
+    .session-item.active {
+        background: #EBECEC;
+    }
+
+    .session-avatar {
+        width: 45px;
+        height: 45px;
+        background: #D1D7DB;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .session-avatar img,
+    .header-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .session-info {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .session-info h5 {
+        margin: 0;
+        font-size: 0.95rem;
+        color: #111B21;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Chat Area */
+    .chat-window {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .chat-header {
+        background-color: var(--wa-header);
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        z-index: 10;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-avatar {
+        width: 40px;
+        height: 40px;
+        background: #fff;
+        border-radius: 50%;
+        overflow: hidden;
+    }
+
+    .message-area {
+        flex-grow: 1;
+        padding: 20px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        /* CUSTOM WALLPAPER */
+        background-image: url("{{ current_user.wallpaper_url or '/static/images/chat_bg.png' }}");
+        background-repeat: no-repeat;
+        background-size: contain;
+        background-position: center;
+        background-attachment: local;
+        position: relative;
+    }
+
+    .message-area::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(229, 221, 213, 0.4);
+        /* Glass overlay for better contrast */
+        z-index: 0;
+    }
+
+    .message-area>* {
+        z-index: 1;
+    }
+
+    /* Bubble Styles */
+    .message {
+        position: relative;
+        max-width: 70%;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        line-height: 1.4;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 4px;
+        color: #000000;
+    }
+
+    .received {
+        background-color: var(--wa-received);
+        align-self: flex-start;
+        border-top-left-radius: 0;
+    }
+
+    .received::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -8px;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 0 10px 10px 0;
+        border-color: transparent var(--wa-received) transparent transparent;
+    }
+
+    .sent {
+        background-color: var(--wa-sent);
+        align-self: flex-end;
+        border-top-right-radius: 0;
+    }
+
+    .sent::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: -8px;
+        width: 0;
+        height: 0;
+        border-style: solid;
+        border-width: 10px 10px 0 0;
+        border-color: var(--wa-sent) transparent transparent transparent;
+    }
+
+    .msg-sender {
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--wa-teal);
+        margin-bottom: 2px;
+    }
+
+    .msg-time {
+        font-size: 0.7rem;
+        color: var(--wa-muted);
+        align-self: flex-end;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+
+    /* Thinking UI */
+    .thinking-process {
+        margin-bottom: 12px;
+        max-width: 90%;
+    }
+
+    .thinking-process details {
+        border-radius: 12px;
+        background: var(--gemini-bg);
+        overflow: hidden;
+    }
+
+    .thinking-process summary {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+        color: var(--gemini-sparkle);
+        cursor: pointer;
+        font-weight: 600;
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .thinking-process summary::before {
+        content: "✨";
+    }
+
+    /* Input */
+    .message-input-container {
+        padding: 8px 15px;
+        background: #f0f2f5;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .input-wrapper {
+        flex: 1;
+        background: white;
+        border-radius: 20px;
+        padding: 5px 15px;
+    }
+
+    .input-wrapper input {
+        border: none;
+        width: 100%;
+        outline: none;
+        padding: 5px 0;
+        font-size: 0.95rem;
+    }
+
+    .btn-send {
+        width: 40px;
+        height: 40px;
+        background: var(--wa-teal);
+        color: white;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Settings Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 2000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background: white;
+        margin: 10% auto;
+        padding: 24px;
+        border-radius: 16px;
+        width: 400px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-new-chat {
+        background: var(--wa-teal);
+        color: white;
+        border: none;
+        border-radius: 18px;
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
 </style>
 
-<div class="messenger-container">
-    <div class="chat-list">
-        <div class="chat-item">Kustor_AI (New Chat)</div>
-    </div>
-    <div class="chat-window">
-        <div class="chat-header">Kustor_AI</div>
-        <div class="message-area" id="message-area">
-            <div class="message received">
-                <div class="msg-bubble">
-                    <div class="msg-sender">Kustor_AI</div>
-                    <div class="msg-content">I am ready. Ask me to generate a lesson (e.g., "generate a lesson on python functions").</div>
-                    <div class="msg-time">Now</div>
+
+<div class="messenger-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="header-avatar" style="cursor: pointer;"
+                    onclick="document.getElementById('profile-modal').style.display='block'">
+                    <img src="{{ current_user.avatar_url or '/static/images/chat_bg.png' }}" alt="My Profile">
                 </div>
+                <h4 style="margin: 0; color: #54656F;">My Chats</h4>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn-new-chat" onclick="createNewChat()">+ New</button>
             </div>
         </div>
-        <div class="message-input">
-            <form id="chat-form">
-                <input type="text" id="message-input" autocomplete="off" placeholder="Type your message or command...">
-                <button type="submit">Send</button>
+        <div class="sidebar-content">
+            {% for s in sessions %}
+            <div class="session-item {% if s.id == current_session %}active{% endif %}"
+                style="justify-content: space-between; position: relative;">
+                <div style="display: flex; align-items: center; gap: 10px; flex: 1; cursor: pointer;"
+                    onclick="switchSession('{{ s.id }}')">
+                    <div class="session-avatar">
+                        <img src="/static/images/chat_bg.png" alt="AI Avatar">
+                    </div>
+                    <div class="session-info">
+                        <h5 id="title-{{ s.id }}" style="margin: 0; font-size: 0.95rem; color: #111B21;">{{ s.title }}
+                        </h5>
+                        <small style="color: var(--wa-muted); font-size: 0.75rem;">{{ s.created_at|default('Active')
+                            }}</small>
+                    </div>
+                </div>
+                <!-- Rename Button -->
+                <button onclick="renameSession(event, '{{ s.id }}', '{{ s.title }}')"
+                    style="background: none; border: none; cursor: pointer; font-size: 1.1rem; opacity: 0.6; padding: 5px; z-index: 2;"
+                    title="Rename Chat">
+                    ✏️
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content">
+            <h3>Customize Profile</h3>
+            <form id="profile-form" enctype="multipart/form-data">
+                <div style="margin-bottom: 15px;">
+                    <label>Profile Picture:</label><br>
+                    <input type="file" name="avatar" accept="image/*">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label>Chat Wallpaper:</label><br>
+                    <input type="file" name="wallpaper" accept="image/*">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button"
+                        onclick="document.getElementById('profile-modal').style.display='none'">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('profile-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const response = await fetch('/update-profile', {
+                method: 'POST',
+                body: formData
+            });
+            if (response.ok) {
+                window.location.reload();
+            } else {
+                alert('Update failed');
+            }
+        };
+
+        async function renameSession(event, sessionId, currentTitle) {
+            event.stopPropagation(); // Prevent switching session
+            const newTitle = prompt("Enter new chat name:", currentTitle);
+            if (newTitle && newTitle.trim() !== "") {
+                try {
+                    const response = await fetch("{{ url_for('main.rename_session') }}", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ session_id: sessionId, title: newTitle.trim() })
+                    });
+
+                    if (response.ok) {
+                        // Update UI immediately
+                        document.getElementById(`title-${sessionId}`).innerText = newTitle.trim();
+                    } else {
+                        alert("Failed to rename session.");
+                    }
+                } catch (error) {
+                    console.error("Error renaming session:", error);
+                    alert("An error occurred.");
+                }
+            }
+        }
+    </script>
+
+    <!-- Main Chat Window -->
+    <div class="chat-window">
+        <div class="chat-header">
+            <div class="header-avatar">
+                <img src="/static/images/chat_bg.png" alt="ADC Logo">
+            </div>
+            <div class="header-info">
+                <h4>Autodidatic_AI</h4>
+                <small>Session: {{ current_session }} • Academy Mentor</small>
+            </div>
+        </div>
+
+        <div class="message-area" id="message-area">
+            {% if not messages %}
+            <div class="message received">
+                <div class="msg-sender">Autodidatic_AI</div>
+                <div class="msg-content">Hello! I'm your AI path mentor. How can I help you today?</div>
+                <div class="msg-time">Now</div>
+            </div>
+            {% else %}
+            {% for msg in messages %}
+            <div class="message {% if msg.sender == current_user.username %}sent{% else %}received{% endif %}">
+                <div class="msg-sender">{{ msg.sender }}</div>
+                <div class="msg-content">{{ msg.content|safe }}</div>
+                <div class="msg-time">{{ msg.timestamp }}</div>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="message-input-container">
+            <form id="chat-form" style="display: flex; width: 100%; gap: 10px; align-items: center;">
+                <div class="input-wrapper">
+                    <input type="text" id="message-input" autocomplete="off"
+                        placeholder="Ask a question or use 'create course: <topic>'...">
+                </div>
+                <button type="submit" class="btn-send">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                    </svg>
+                </button>
             </form>
         </div>
     </div>
@@ -49,79 +480,132 @@
 
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script>
+    const currentSession = "{{ current_session }}";
+
+    function switchSession(sid) {
+        window.location.href = `{{ url_for('main.ai_tutor') }}?session=${sid}`;
+    }
+
+    function createNewChat() {
+        const newSid = Date.now().toString();
+        switchSession(newSid);
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
-        const room = "1"; 
+        const room = currentSession;
         const socket = io();
         const messageArea = document.getElementById('message-area');
+        messageArea.scrollTop = messageArea.scrollHeight; // Initial scroll
 
-        // --- SOCKET EVENT LISTENERS ---
         socket.on('connect', () => {
             socket.emit('join', { room: room });
         });
 
-        // Handles regular, non-streamed messages
         socket.on('receive_message', (data) => {
             addMessage(data.sender, data.content, data.timestamp);
         });
 
-        // Creates the initial AI message bubble when streaming starts
         socket.on('stream_start', (data) => {
             createStreamMessage(data.sender);
         });
 
-        // Appends each new chunk of text to the streaming message bubble
         socket.on('stream_chunk', (data) => {
             appendToStreamMessage(data.chunk);
         });
 
-        // Finalizes the streamed message with its timestamp
+        socket.on('stream_thought', (data) => {
+            if (!document.getElementById('streaming-thought')) {
+                createStreamThought();
+            }
+            appendToStreamThought(data.chunk);
+        });
+
         socket.on('stream_end', (data) => {
             finalizeStreamMessage(data.timestamp);
         });
 
-        // --- FORM SUBMISSION ---
         const form = document.getElementById('chat-form');
         const input = document.getElementById('message-input');
-        
+
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const message = input.value;
             if (message) {
-                // Always display the user's message
-                addMessage("{{ current_user.username }}", message, new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+                // Pass full date object (or ISO string) so addMessage can format it with seconds
+                addMessage("{{ current_user.username }}", message, new Date().toISOString());
                 socket.emit('send_message', { room: room, message: message });
                 input.value = '';
             }
         });
-        
-        // --- HELPER FUNCTIONS ---
+
         function addMessage(sender, content, timestamp) {
             const messageClass = sender === "{{ current_user.username }}" ? 'sent' : 'received';
             let formattedContent = formatMarkdown(content);
 
+            // Try to format timestamp to include seconds if it's a valid date string
+            let displayTime = timestamp;
+            try {
+                // If timestamp is just HH:MM, this might correspond to today's date? 
+                // Actually JS Date parsers are finicky. 
+                // If backend sends ISO, it works. If backend sends HH:MM, this might fail or set to default date.
+                // But generally for historical messages, we might want to just show what DB gave unless we parse deeply.
+                // However, for NEW messages, we want seconds.
+                // Let's try: if timestamp contains only time (len 5), maybe append seconds if we knew them? No.
+                // But for 'Now' or 'Just now', we want time.
+                // Let's rely on the passed timestamp unless it is clearly a full date string we can reformat.
+                // Actually, let's just use what's passed for history (as it's hard to add seconds if they aren't there)
+                // BUT for new messages, we pass 'new Date()...' from the submit handler.
+                // So let's update the submit handler too.
+
+                const date = new Date(timestamp);
+                if (!isNaN(date.getTime()) && timestamp.length > 8) { // Crude check if it's a full date string
+                    displayTime = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                }
+            } catch (e) { }
+
             const msgHtml = `
             <div class="message ${messageClass}">
-                <div class="msg-bubble">
-                    <div class="msg-sender">${sender}</div>
-                    <div class="msg-content">${formattedContent}</div>
-                    <div class="msg-time">${timestamp}</div>
-                </div>
+                <div class="msg-sender">${sender}</div>
+                <div class="msg-content">${formattedContent}</div>
+                <div class="msg-time">${displayTime}</div>
             </div>`;
             messageArea.innerHTML += msgHtml;
             scrollToBottom();
         }
 
         function createStreamMessage(sender) {
+            // Ensure we don't have a lingering streaming message
+            if (document.getElementById('streaming-message')) return;
+
             const msgHtml = `
             <div class="message received" id="streaming-message">
-                <div class="msg-bubble">
-                    <div class="msg-sender">${sender}</div>
-                    <div class="msg-content"></div>
-                    <div class="msg-time"></div>
-                </div>
+                <div class="msg-sender">${sender}</div>
+                <div class="msg-content"></div>
+                <div class="msg-time"></div>
             </div>`;
             messageArea.innerHTML += msgHtml;
             scrollToBottom();
+        }
+
+        function createStreamThought() {
+            const thoughtHtml = `
+            <div class="thinking-process" id="streaming-thought">
+                <details open>
+                    <summary>💭 Thinking Process</summary>
+                    <div class="thought-content"></div>
+                </details>
+            </div>`;
+            messageArea.innerHTML += thoughtHtml;
+            scrollToBottom();
+        }
+
+        function appendToStreamThought(chunk) {
+            const streamingThought = document.getElementById('streaming-thought');
+            if (streamingThought) {
+                const contentSpan = streamingThought.querySelector('.thought-content');
+                contentSpan.innerHTML += formatMarkdown(chunk);
+                scrollToBottom();
+            }
         }
 
         function appendToStreamMessage(chunk) {
@@ -136,13 +620,26 @@
             const streamingMsg = document.getElementById('streaming-message');
             if (streamingMsg) {
                 const timeDiv = streamingMsg.querySelector('.msg-time');
-                timeDiv.textContent = timestamp;
-                streamingMsg.id = ''; // Remove the ID so we don't append to it anymore
+                // Use format with seconds if timestamp passed doesn't have it,
+                // but usually backend sends HH:MM. We might want to use client time for seconds?
+                // The user asked for seconds. Backend sends '%H:%M'.
+                // Let's overwrite with client time including seconds for immediate feedback,
+                // OR update backend.
+                // Updating backend is better for consistency, but client-side override is easier here.
+                // Let's use client time for the "just finished" message.
+                timeDiv.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                streamingMsg.id = '';
+            }
+            // Also finalize thought bubble
+            const streamingThought = document.getElementById('streaming-thought');
+            if (streamingThought) {
+                streamingThought.id = '';
             }
         }
-        
+
+
         function formatMarkdown(text) {
-             return text
+            return text
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                 .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>');
         }

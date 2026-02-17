@@ -1,38 +1,324 @@
 {% extends "layout.html" %}
 {% block content %}
-    <h1>My Dashboard</h1>
-    <p>Welcome, {{ current_user.username }}!</p>
-    <hr>
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div>
+                <h1 class="nav-brand" style="font-size: 2.5rem; margin-bottom: 0.5rem;">My Learning Path</h1>
+                <p style="color: var(--text-muted);">Welcome back, <span
+                        style="color: var(--text-main); font-weight: 600;">{{ current_user.username }}</span>!</p>
+            </div>
+            <div>
+                <a href="{{ url_for('main.community') }}" class="btn btn-primary"
+                    style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 50px; background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); border: none;">
+                    <i class="fas fa-users"></i> Academy Community
+                </a>
+            </div>
+        </div>
+        <div class="stats-grid">
+            <div class="card stat-card">
+                <span class="stat-label">Daily Streak</span>
+                <span class="stat-value">🔥 {{ current_user.streak }} Days</span>
+            </div>
+        </div>
+    </header>
 
-    {# If the user HAS a roadmap, display it #}
+    <section class="identity-section card"
+        style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h4 style="margin: 0; color: var(--text-main);">Social Identity</h4>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin: 0;">Link your accounts for faster access</p>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('main.link_oauth', provider='google') }}" class="btn"
+                style="border: 1px solid var(--border-glass); font-size: 0.75rem;">Link Google</a>
+            <a href="{{ url_for('main.link_oauth', provider='github') }}" class="btn"
+                style="border: 1px solid var(--border-glass); font-size: 0.75rem;">Link GitHub</a>
+            <a href="{{ url_for('main.link_oauth', provider='discord') }}" class="btn"
+                style="border: 1px solid var(--border-glass); font-size: 0.75rem;">Link Discord</a>
+        </div>
+    </section>
+
     {% if roadmap %}
-        <h3>Your Roadmap: {{ roadmap.goal }}</h3>
+    <section class="roadmap-overview card">
+        <div class="roadmap-info">
+            <span class="badge">Active Goal</span>
+            <h2 style="margin: 0.5rem 0 1.5rem 0;">{{ roadmap.goal }}</h2>
+            <div style="display: flex; gap: 1rem;">
+                <a href="{{ url_for('main.download_schedule', roadmap_id=roadmap.id) }}" class="btn btn-primary"
+                    style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    Get Study Schedule (.ics)
+                </a>
+            </div>
+        </div>
         {% if roadmap.image_url %}
-            <img src="{{ roadmap.image_url }}" alt="Roadmap Banner" style="width:100%; max-width:600px; border-radius: 8px; margin-bottom: 20px;">
+        <div class="roadmap-banner">
+            <img src="{{ roadmap.image_url }}" alt="Roadmap Banner">
+        </div>
         {% endif %}
+    </section>
 
-        <h4>Your Steps:</h4>
+    <h3 style="margin: 2rem 0 1rem 0;">Curriculum</h3>
+    <div class="steps-grid">
         {% for step in roadmap.steps|sort(attribute='step_number') %}
-            <article style="border-left: 3px solid #ccc; padding-left: 15px; margin-bottom: 15px;">
-                <p><strong>Step {{ step.step_number }}: {{ step.title }}</strong> (Status: {{ step.status.replace('_', ' ')|title }})</p>
-                <p>{{ step.description }}</p>
-            </article>
-        {% endfor %}
-    
-    {# If the user DOES NOT have a roadmap, show the initial state #}
-    {% else %}
-        <h3>Your Stats</h3>
-        <ul>
-            <li><strong>Daily Streak:</strong> {{ current_user.streak }} Day(s)</li>
-            <li><strong>Roadmap:</strong> Not Set</li>
-            <li><strong>Steps Taken:</strong> 0</li>
-            <li><strong>Courses Registered:</strong> 0</li>
-        </ul>
-        <hr>
-        <p>Ready to start your journey? Let Kustor_AI build a personalized plan for you.</p>
-        <a href="{{ url_for('main.onboarding') }}">
-            <button>Start with Kustor_AI</button>
-        </a>
-    {% endif %}
+        <div class="card step-card">
+            <div class="step-header">
+                <div class="step-number">{{ step.step_number }}</div>
+                <div style="flex: 1;">
+                    <h4 style="margin: 0;">{{ step.title }}</h4>
+                    <span class="status-tag status-{{ step.status }}">{{ step.status.replace('_', ' ')|title }}</span>
+                </div>
+            </div>
 
+            <p style="color: var(--text-muted); margin: 1rem 0;">{{ step.description }}</p>
+
+            {# YouTube Section #}
+            {% set queries = step.get_queries() %}
+            {% if queries %}
+            <div class="youtube-section">
+                <span
+                    style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: 0.5rem;">Recommended
+                    Viewing</span>
+                <div class="query-tags">
+                    {% for q in queries %}
+                    <a href="https://www.youtube.com/results?search_query={{ q }}" target="_blank" class="query-tag">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z" />
+                        </svg>
+                        {{ q }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="step-actions">
+                {% if step.lecture_content %}
+                <details class="lecture-details">
+                    <summary class="btn"
+                        style="border: 1px solid var(--border-glass); width: 100%; justify-content: space-between; display: flex;">
+                        <span>📖 Read AI Lecture</span>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
+                            </path>
+                        </svg>
+                    </summary>
+                    <div class="lecture-body">{{ step.lecture_content|safe }}</div>
+                </details>
+
+                {% if step.audio_url %}
+                <div class="audio-player">
+                    <span
+                        style="font-size: 0.75rem; font-weight: 700; color: var(--text-muted); margin-bottom: 0.5rem; display: block;">Audio
+                        Lesson</span>
+                    <audio controls style="width: 100%;">
+                        <source src="{{ url_for('main.uploaded_file', subfolder='audio', filename=step.audio_url) }}"
+                            type="audio/mpeg">
+                    </audio>
+                </div>
+                {% endif %}
+                {% else %}
+                <form action="{{ url_for('main.generate_step_lecture', step_id=step.id) }}" method="POST">
+                    <button type="submit" class="btn btn-primary"
+                        style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <span>✨ Generate AI Lesson</span>
+                    </button>
+                </form>
+                {% endif %}
+
+                <form action="{{ url_for('main.sync_to_google_calendar', step_id=step.id) }}" method="POST"
+                    style="margin-top: 0.5rem;">
+                    <button type="submit" class="btn"
+                        style="width: 100%; border: 1px solid var(--border-glass); color: var(--text-muted); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        <img src="https://www.gstatic.com/images/branding/product/1x/calendar_32dp.png" alt="GC"
+                            style="width: 16px; height: 16px;">
+                        Sync to Google Calendar
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="card text-center" style="padding: 4rem 2rem;">
+        <div style="font-size: 4rem; margin-bottom: 1rem;">🚀</div>
+        <h2>Start Your Success Story</h2>
+        <p style="color: var(--text-muted); max-width: 500px; margin: 0 auto 2rem;">Ready to embark on a personalized
+            learning journey? Let ADC Academy design an optimized curriculum for your specific career goals.</p>
+        <a href="{{ url_for('main.onboarding') }}" class="btn btn-primary"
+            style="padding: 1rem 2.5rem; font-size: 1.1rem;">
+            Create My Roadmap
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        padding: 1rem 1.5rem;
+        margin-bottom: 0;
+    }
+
+    .stat-label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .stat-value {
+        font-size: 1.25rem;
+        font-weight: 800;
+    }
+
+    .roadmap-overview {
+        display: flex;
+        gap: 2rem;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .roadmap-info {
+        flex: 1;
+    }
+
+    .roadmap-banner {
+        width: 300px;
+        height: 180px;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+
+    .roadmap-banner img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .badge {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--primary);
+        padding: 0.25rem 0.75rem;
+        border-radius: 2rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        border: 1px solid rgba(59, 130, 246, 0.2);
+    }
+
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .step-card {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .step-header {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .step-number {
+        width: 32px;
+        height: 32px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 0.875rem;
+    }
+
+    .status-tag {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.1rem 0.5rem;
+        border-radius: 0.25rem;
+        text-transform: uppercase;
+    }
+
+    .status-not_started {
+        background: rgba(148, 163, 184, 0.1);
+        color: #94a3b8;
+    }
+
+    .status-completed {
+        background: rgba(34, 197, 94, 0.1);
+        color: #4ade80;
+    }
+
+    .youtube-section {
+        margin-top: 1rem;
+        border-top: 1px solid var(--border-glass);
+        padding-top: 1rem;
+    }
+
+    .query-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .query-tag {
+        background: rgba(239, 68, 68, 0.1);
+        color: #fca5a5;
+        padding: 0.25rem 0.6rem;
+        border-radius: 0.4rem;
+        font-size: 0.75rem;
+        border: 1px solid rgba(239, 68, 68, 0.2);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .lecture-details {
+        margin-top: 1.5rem;
+    }
+
+    .lecture-body {
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        margin-top: 1rem;
+        background: rgba(15, 23, 42, 0.3);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid var(--border-glass);
+        white-space: pre-wrap;
+    }
+
+    .audio-player {
+        margin-top: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid var(--border-glass);
+    }
+
+    .step-actions {
+        margin-top: auto;
+        padding-top: 1.5rem;
+    }
+</style>
 {% endblock content %}

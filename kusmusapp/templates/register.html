@@ -1,52 +1,160 @@
 {% extends "layout.html" %}
 {% block content %}
-    <div>
+<div style="max-width: 600px; margin: 2rem auto;">
+    <div class="card">
+        <h2 class="text-center">Join ADC Academy</h2>
+        <p class="text-center" style="color: var(--text-muted); margin-bottom: 2rem;">Empowering Nigerians with global
+            skills</p>
+
         <form method="POST" action="">
             {{ form.hidden_tag() }}
-            <fieldset>
-                <legend>Join Today</legend>
-                <div>
-                    {{ form.username.label }}<br>
-                    {{ form.username(size=20) }}<br>
-                    {% for error in form.username.errors %}
-                        <small style="color: red;">{{ error }}</small><br>
+
+            <div class="form-section">
+                <h4 style="font-size: 0.9rem; color: var(--primary); text-transform: uppercase; margin-bottom: 1rem;">
+                    Primary Identity</h4>
+                <div class="form-group">
+                    {{ form.full_name.label(class="form-label") }}
+                    {{ form.full_name(class="form-control", placeholder="John Doe") }}
+                    {% for error in form.full_name.errors %}
+                    <small style="color: #fca5a5;">{{ error }}</small>
                     {% endfor %}
                 </div>
-                <br>
-                <div>
-                    {{ form.email.label }}<br>
-                    {{ form.email(size=20) }}<br>
-                    {% for error in form.email.errors %}
-                        <small style="color: red;">{{ error }}</small><br>
-                    {% endfor %}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        {{ form.username.label(class="form-label") }}
+                        {{ form.username(class="form-control", placeholder="johndoe") }}
+                        {% for error in form.username.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.email.label(class="form-label") }}
+                        {{ form.email(class="form-control", placeholder="name@example.com") }}
+                        {% for error in form.email.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
                 </div>
-                <br>
-                <div>
-                    {{ form.password.label }}<br>
-                    {{ form.password(size=20) }}<br>
-                    {% for error in form.password.errors %}
-                        <small style="color: red;">{{ error }}</small><br>
-                    {% endfor %}
+            </div>
+
+            <div class="form-section"
+                style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+                <h4 style="font-size: 0.9rem; color: var(--primary); text-transform: uppercase; margin-bottom: 1rem;">
+                    Localization</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        {{ form.state.label(class="form-label") }}
+                        {{ form.state(class="form-control") }}
+                        {% for error in form.state.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.lga.label(class="form-label") }}
+                        {{ form.lga(class="form-control") }}
+                        {% for error in form.lga.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
                 </div>
-                <br>
-                <div>
-                    {{ form.confirm_password.label }}<br>
-                    {{ form.confirm_password(size=20) }}<br>
-                    {% for error in form.confirm_password.errors %}
-                        <small style="color: red;">{{ error }}</small><br>
-                    {% endfor %}
+            </div>
+
+            <div class="form-section"
+                style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+                <h4 style="font-size: 0.9rem; color: var(--primary); text-transform: uppercase; margin-bottom: 1rem;">
+                    Personal Profile</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        {{ form.gender.label(class="form-label") }}
+                        {{ form.gender(class="form-control") }}
+                        {% for error in form.gender.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.age.label(class="form-label") }}
+                        {{ form.age(class="form-control", placeholder="25") }}
+                        {% for error in form.age.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
                 </div>
-            </fieldset>
-            <br>
-            <div>
-                {{ form.submit() }}
+            </div>
+
+            <div class="form-section"
+                style="margin-top: 2rem; border-top: 1px solid var(--border-glass); padding-top: 1.5rem;">
+                <h4 style="font-size: 0.9rem; color: var(--primary); text-transform: uppercase; margin-bottom: 1rem;">
+                    Security</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        {{ form.password.label(class="form-label") }}
+                        {{ form.password(class="form-control", placeholder="••••••••") }}
+                        {% for error in form.password.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        {{ form.confirm_password.label(class="form-label") }}
+                        {{ form.confirm_password(class="form-control", placeholder="••••••••") }}
+                        {% for error in form.confirm_password.errors %}
+                        <small style="color: #fca5a5;">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                {{ form.submit(class="btn btn-primary", style="width: 100%; padding: 1rem; font-weight: 700;") }}
             </div>
         </form>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const locationData = {{ location_json | safe
+            }};
+            const stateSelect = document.getElementById('state');
+            const lgaSelect = document.getElementById('lga');
+
+            stateSelect.addEventListener('change', function () {
+                const stateName = this.value;
+                const state = locationData.locations.find(loc => loc.state === stateName);
+
+                // Clear LGAs
+                lgaSelect.innerHTML = '<option value="">Select LGA</option>';
+
+                if (state) {
+                    state.localGovt.forEach(lga => {
+                        const option = document.createElement('option');
+                        option.value = lga;
+                        option.textContent = lga.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+                        lgaSelect.appendChild(option);
+                    });
+                }
+            });
+            });
+        </script>
+
+        <hr style="margin: 2rem 0; border: 0; border-top: 1px solid var(--border-glass);">
+
+        <div class="text-center">
+            <p style="font-weight: 600; color: var(--text-muted); margin-bottom: 1rem; font-size: 0.875rem;">
+                Or sign up using Social Identity
+            </p>
+            <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;">
+                <a href="{{ url_for('main.login_oauth', provider='google') }}" class="btn"
+                    style="border: 1px solid var(--border-glass); font-size: 0.85rem; padding: 0.5rem 1.5rem;">Google</a>
+                <a href="{{ url_for('main.login_oauth', provider='github') }}" class="btn"
+                    style="border: 1px solid var(--border-glass); font-size: 0.85rem; padding: 0.5rem 1.5rem;">GitHub</a>
+                <a href="{{ url_for('main.login_oauth', provider='discord') }}" class="btn"
+                    style="border: 1px solid var(--border-glass); font-size: 0.85rem; padding: 0.5rem 1.5rem;">Discord</a>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <small style="color: var(--text-muted);">
+                Already have an account? <a href="{{ url_for('main.login') }}" style="font-weight: 600;">Sign In</a>
+            </small>
+        </div>
     </div>
-    <br>
-    <div>
-        <small>
-            Already Have An Account? <a href="{{ url_for('main.login') }}">Sign In</a>
-        </small>
-    </div>
+</div>
 {% endblock content %}

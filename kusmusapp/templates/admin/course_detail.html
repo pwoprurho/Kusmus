@@ -1,32 +1,195 @@
 {% extends "layout.html" %}
 {% block content %}
-    <a href="{{ url_for('main.dashboard') }}">&laquo; Back to Dashboard</a>
-    <hr>
-    <h1>{{ course.title }}</h1>
-    <p>{{ course.description }}</p>
-    <hr>
+<style>
+    .course-detail-container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
 
-    <h3>Course Modules</h3>
-    <a href="{{ url_for('main.add_module', course_id=course.id) }}">Add New Module</a>
-    <br><br>
+    .glass-card {
+        background: rgba(30, 30, 50, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 2rem;
+        backdrop-filter: blur(10px);
+        margin-bottom: 2rem;
+    }
 
-    {% for module in course.modules %}
-        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; border-radius: 5px;">
-            <h4>{{ module.title }}</h4>
-            <a href="{{ url_for('main.add_assignment', module_id=module.id) }}">Add Assignment</a>
-            <ul style="list-style-type: none; padding-left: 10px; margin-top: 10px;">
-                {% for assignment in module.assignments %}
-                    <li style="border-top: 1px dashed #eee; padding-top: 5px; margin-top: 5px;">
-                        <strong>{{ assignment.title }}</strong> 
-                        - <a href="{{ url_for('main.solve_assignment', assignment_id=assignment.id) }}">Solve Page</a>
-                        - <a href="{{ url_for('main.view_submissions', assignment_id=assignment.id) }}">View Submissions</a>
-                    </li>
-                {% else %}
-                    <li>No assignments in this module yet.</li>
-                {% endfor %}
-            </ul>
+    .lesson-item {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: transform 0.2s, background 0.2s;
+    }
+
+    .lesson-item:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary-glass {
+        background: rgba(124, 58, 237, 0.2);
+        color: #a78bfa;
+        border-color: rgba(124, 58, 237, 0.3);
+    }
+
+    .btn-primary-glass:hover {
+        background: rgba(124, 58, 237, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .btn-danger-glass {
+        background: rgba(239, 68, 68, 0.1);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-danger-glass:hover {
+        background: rgba(239, 68, 68, 0.2);
+    }
+
+    .lesson-meta {
+        display: flex;
+        gap: 1rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        align-items: center;
+    }
+
+    .lesson-badge {
+        font-size: 0.75rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        background: rgba(59, 130, 246, 0.15);
+        color: #60a5fa;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+
+    .action-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+</style>
+
+<div class="course-detail-container">
+    <a href="{{ url_for('main.dashboard') }}"
+        style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; margin-bottom: 1.5rem;">
+        ← Back to Dashboard
+    </a>
+
+    <!-- Course Header -->
+    <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem;">
+            <div>
+                <h1
+                    style="margin: 0 0 1rem 0; font-size: 2rem; background: linear-gradient(135deg, #fff, #aaa); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                    {{ course.title }}</h1>
+                <p style="color: var(--text-muted); line-height: 1.6; margin: 0;">{{ course.description }}</p>
+            </div>
+            <div
+                style="background: rgba(124, 58, 237, 0.1); padding: 1rem; border-radius: 12px; text-align: center; min-width: 120px;">
+                <div style="font-size: 2rem; font-weight: 700; color: #a78bfa;">{{ course.lessons|length }}</div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Lessons</div>
+            </div>
         </div>
+
+        <div class="action-row">
+            <span style="color: var(--text-main); font-weight: 600; align-self: center; margin-right: 0.5rem;">Add
+                Lesson:</span>
+            <a href="{{ url_for('main.add_text_lesson', course_id=course.id) }}" class="btn-action btn-primary-glass">📝
+                Text</a>
+            <a href="{{ url_for('main.add_file_lesson', course_id=course.id) }}" class="btn-action btn-primary-glass">📁
+                File</a>
+            <a href="{{ url_for('main.add_video_lesson', course_id=course.id) }}"
+                class="btn-action btn-primary-glass">🎬 Video</a>
+            <a href="{{ url_for('main.add_youtube_lesson', course_id=course.id) }}"
+                class="btn-action btn-primary-glass">▶️ YouTube</a>
+        </div>
+    </div>
+
+    <!-- Lessons List -->
+    <h3
+        style="margin-bottom: 1rem; color: var(--text-muted); font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em;">
+        Course Content</h3>
+
+    {% for lesson in course.lessons %}
+    <div class="lesson-item">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 0.5rem;">
+                    <span class="lesson-badge">{{ lesson.lesson_type }}</span>
+                    <h4 style="margin: 0; font-size: 1.1rem;">
+                        {% if lesson.lesson_type == 'text' %}
+                        <a href="{{ url_for('main.view_lesson', lesson_id=lesson.id) }}"
+                            style="color: var(--text-main); text-decoration: none;">{{ lesson.title }}</a>
+                        {% elif lesson.lesson_type == 'file' %}
+                        <a href="{{ url_for('main.uploaded_file', subfolder='lessons/docs', filename=lesson.file_path) }}"
+                            target="_blank" style="color: var(--text-main); text-decoration: none;">{{ lesson.title
+                            }}</a>
+                        {% else %}
+                        {{ lesson.title }}
+                        {% endif %}
+                    </h4>
+                </div>
+
+                <div class="lesson-meta">
+                    <span>🗓️ {{ lesson.date_posted.strftime('%b %d, %Y') }}</span>
+                </div>
+
+                <!-- Preview Content -->
+                <div style="margin-top: 1rem;">
+                    {% if lesson.lesson_type == 'video' %}
+                    <video width="100%" style="border-radius: 8px; max-width: 480px;" controls>
+                        <source
+                            src="{{ url_for('main.uploaded_file', subfolder='lessons/videos', filename=lesson.file_path) }}"
+                            type="video/mp4">
+                    </video>
+                    {% elif lesson.lesson_type == 'youtube' %}
+                    <div style="border-radius: 8px; overflow: hidden; max-width: 480px;">
+                        <iframe width="100%" height="270" src="https://www.youtube.com/embed/{{ lesson.file_path }}"
+                            frameborder="0" allowfullscreen></iframe>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{{ url_for('main.update_lesson', lesson_id=lesson.id) }}" class="btn-action btn-primary-glass"
+                    style="font-size: 0.8rem; padding: 6px 12px;">Edit</a>
+                <form action="{{ url_for('main.delete_lesson', lesson_id=lesson.id) }}" method="POST"
+                    style="display:inline;">
+                    <button type="submit" class="btn-action btn-danger-glass"
+                        style="font-size: 0.8rem; padding: 6px 12px; cursor: pointer;"
+                        onclick="return confirm('Delete this lesson permanently?');">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
     {% else %}
-        <p>No modules have been created for this course yet.</p>
+    <div class="glass-card" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+        <p>No lessons added yet. Start by adding one above!</p>
+    </div>
     {% endfor %}
+</div>
 {% endblock content %}

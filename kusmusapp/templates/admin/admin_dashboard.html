@@ -1,32 +1,309 @@
 {% extends "layout.html" %}
 {% block content %}
-    <h1>Admin Dashboard</h1>
-    <p>Welcome, {{ current_user.username }}!</p>
-    
-    <hr>
-    <h2>Course Management</h2>
-    <a href="{{ url_for('main.create_course') }}">Create New Course</a>
-    <hr>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 
-    <h3>Existing Courses:</h3>
-    {% if courses %}
-        {% for course in courses %}
-            <article>
-                <h4><a href="{{ url_for('main.course_detail', course_id=course.id) }}">{{ course.title }}</a></h4>
-                <p>{{ course.description }}</p>
-                <small>Posted on: {{ course.date_posted.strftime('%Y-%m-%d') }} by {{ course.author.username }}</small>
-                
-                <div>
-                    <a href="{{ url_for('main.update_course', course_id=course.id) }}">Edit</a>
-                    <form action="{{ url_for('main.delete_course', course_id=course.id) }}" method="POST" style="display:inline;">
-                        <input type="submit" value="Delete" onclick="return confirm('Are you sure you want to delete this course and all its lessons?');">
-                    </forM>
-                </div>
-                <br>
-            </article>
-        {% endfor %}
-    {% else %}
-        <p>No courses have been created yet.</p>
-    {% endif %}
+<style>
+    .analytics-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
 
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+        border: 1px solid rgba(139, 92, 246, 0.25);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-card h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin: 0;
+        background: linear-gradient(135deg, #3b82f6, #c084fc);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .stat-card p {
+        color: var(--text-muted);
+        margin: 0.5rem 0 0;
+        font-size: 0.9rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .dash-card {
+        background: var(--card-bg, rgba(30, 30, 50, 0.7));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+        border-radius: 16px;
+        padding: 1.5rem;
+        backdrop-filter: blur(10px);
+    }
+
+    .dash-card h3 {
+        margin-top: 0;
+        font-size: 1.1rem;
+        color: var(--text-main, #fff);
+    }
+
+    #nigeriaMap {
+        height: 420px;
+        width: 100%;
+        border-radius: 12px;
+        z-index: 1;
+    }
+
+    .chart-container {
+        position: relative;
+        height: 280px;
+        width: 100%;
+    }
+
+    .map-digit-icon {
+        background-color: #7c3aed;
+        color: white;
+        border: 2px solid white;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.5);
+    }
+
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .student-table thead th {
+        background: rgba(59, 130, 246, 0.15);
+        color: var(--text-main, #fff);
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+    }
+
+    .student-table tbody td {
+        padding: 0.65rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-muted, #aaa);
+    }
+
+    .student-table tbody tr:hover {
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .table-scroll {
+        max-height: 350px;
+        overflow-y: auto;
+        border-radius: 12px;
+    }
+
+    .live-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(34, 197, 94, 0.15);
+        color: #22c55e;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .live-badge::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+
+        0%,
+        100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.4;
+        }
+    }
+</style>
+
+<div class="analytics-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 style="margin: 0; font-size: 1.8rem;">Admin Dashboard</h1>
+        <span class="live-badge">Live Data</span>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-row" id="stats-row">
+        <div class="stat-card">
+            <h2 id="stat-students">{{ students|length }}</h2>
+            <p>Total Students</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="stat-courses">{{ total_courses }}</h2>
+            <p>Total Courses</p>
+        </div>
+        <div class="stat-card">
+            <h2 id="stat-lgas">--</h2>
+            <p>LGAs Covered</p>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="dash-card" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0;">🗺️ Student Impact Map (By State)</h3>
+        </div>
+        <div id="nigeriaMap"></div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="dashboard-grid">
+        <div class="dash-card">
+            <h3>📊 Registrations by LGA</h3>
+            <div class="chart-container"><canvas id="lgaBarChart"></canvas></div>
+        </div>
+        <div class="dash-card">
+            <h3>🎯 Skills Demand by Age</h3>
+            <div class="chart-container"><canvas id="ageSkillsPieChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Student Management Link -->
+    <div class="dash-card">
+        <h3>👤 Student Management</h3>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">View, search, and manage all registered students.</p>
+        <a href="{{ url_for('main.admin_students') }}" class="btn btn-primary"
+            style="display: inline-flex; align-items: center; gap: 8px; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 8px; background: rgba(124, 58, 237, 0.2); color: #a78bfa; border: 1px solid rgba(124, 58, 237, 0.4); transition: all 0.3s ease;">
+            <span>View All Students</span>
+            <span>→</span>
+        </a>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let mapInstance = null, barChartInstance = null, pieChartInstance = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        fetchAnalytics();
+    });
+
+    function fetchAnalytics() {
+        fetch("{{ url_for('main.admin_analytics_api') }}")
+            .then(r => r.json())
+            .then(data => {
+                // Update stats card
+                if (data.stats) {
+                    document.getElementById('stat-lgas').textContent = data.stats.total_lgas || 0;
+                }
+
+                // Render map
+                if (data.map_data && document.getElementById('nigeriaMap')) {
+                    initLeafletMap(data.map_data);
+                }
+
+                // Render charts
+                if (data.lga_chart) renderBarChart(data.lga_chart);
+                if (data.skills_by_age) renderPieChart(data.skills_by_age);
+            })
+            .catch(err => console.error("Analytics Error:", err));
+    }
+
+    function initLeafletMap(mapData) {
+        if (mapInstance) mapInstance.remove();
+        mapInstance = L.map('nigeriaMap').setView([9.0820, 8.6753], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(mapInstance);
+
+        const statesCoords = {
+            "Abia": [5.4527, 7.5248], "Adamawa": [9.3265, 12.3984], "Akwa Ibom": [5.0515, 7.8467],
+            "Anambra": [6.2209, 6.9370], "Bauchi": [10.7761, 9.9440], "Bayelsa": [4.7719, 6.0699],
+            "Benue": [7.3369, 8.7404], "Borno": [11.8846, 13.1520], "Cross River": [5.8702, 8.5988],
+            "Delta": [5.8904, 5.6806], "Ebonyi": [6.2649, 8.0137], "Edo": [6.5244, 5.8987],
+            "Ekiti": [7.6674, 5.3783], "Enugu": [6.5364, 7.4356], "FCT": [9.0765, 7.3986],
+            "Gombe": [10.2897, 11.1712], "Imo": [5.5720, 7.0588], "Jigawa": [12.2280, 9.5616],
+            "Kaduna": [10.3764, 7.7093], "Kano": [11.7471, 8.5247], "Katsina": [12.9616, 7.6223],
+            "Kebbi": [11.4942, 4.2336], "Kogi": [7.7337, 6.6906], "Kwara": [8.9669, 4.3874],
+            "Lagos": [6.5244, 3.3792], "Nasarawa": [8.5475, 8.3520], "Niger": [9.9309, 5.6806],
+            "Ogun": [7.1604, 3.3500], "Ondo": [7.2508, 5.1931], "Osun": [7.5629, 4.5200],
+            "Oyo": [8.1574, 3.6147], "Plateau": [9.2182, 9.5179], "Rivers": [4.8156, 7.0498],
+            "Sokoto": [13.0533, 5.2300], "Taraba": [7.9994, 10.5643], "Yobe": [12.0000, 11.5000],
+            "Zamfara": [12.1221, 6.2236]
+        };
+
+        for (const [state, coords] of Object.entries(statesCoords)) {
+            let count = mapData[state] || 0;
+            if (count > 0) {
+                const icon = L.divIcon({
+                    className: 'custom-number-icon',
+                    html: `<div class="map-digit-icon">${count}</div>`,
+                    iconSize: [32, 32], iconAnchor: [16, 16]
+                });
+                L.marker(coords, { icon: icon })
+                    .bindPopup(`<b>${state} State</b><br>Students: ${count}`)
+                    .addTo(mapInstance);
+            }
+        }
+    }
+
+    function renderBarChart(data) {
+        const ctx = document.getElementById('lgaBarChart').getContext('2d');
+        if (barChartInstance) barChartInstance.destroy();
+        barChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: { labels: data.labels, datasets: [{ label: 'Students', data: data.data, backgroundColor: '#7c3aed', borderRadius: 6 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa', maxRotation: 45 } } } }
+        });
+    }
+
+    function renderPieChart(data) {
+        const ctx = document.getElementById('ageSkillsPieChart').getContext('2d');
+        if (pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels: data.labels, datasets: [{ data: data.data, backgroundColor: ['#3b82f6', '#22c55e', '#f59e0b', '#ef4444'], borderWidth: 0 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#aaa', padding: 15 } } } }
+        });
+    }
+</script>
 {% endblock content %}

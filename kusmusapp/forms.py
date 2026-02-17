@@ -1,23 +1,38 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, TimeField, FloatField, DateField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, TimeField, FloatField, SelectField, IntegerField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, URL, NumberRange
-from kusmusapp.models import User
+from kusmusapp.services.supabase_client import get_supabase
 
+# User Auth Forms
 class RegistrationForm(FlaskForm):
+    full_name = StringField('Full Name', validators=[DataRequired(), Length(min=2, max=100)])
     username = StringField('Username', validators=[DataRequired(), Length(min=2, max=20)])
     email = StringField('Email', validators=[DataRequired(), Email()])
+    
+    # Location data
+    state = SelectField('State', choices=[], validators=[DataRequired()])
+    lga = SelectField('Local Government Area', choices=[], validators=[DataRequired()])
+    
+    # Personal Info
+    gender = SelectField('Gender', choices=[('', 'Select Gender'), ('male', 'Male'), ('female', 'Female')], validators=[DataRequired()])
+    age = IntegerField('Age', validators=[DataRequired(), NumberRange(min=10, max=100)])
+
     password = PasswordField('Password', validators=[DataRequired()])
     confirm_password = PasswordField('Confirm Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
 
     def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-        if user: raise ValidationError('That username is already taken.')
+        sb = get_supabase()
+        result = sb.table('users').select('id').eq('username', username.data).execute()
+        if result.data:
+            raise ValidationError('That username is already taken.')
 
     def validate_email(self, email):
-        user = User.query.filter_by(email=email.data).first()
-        if user: raise ValidationError('That email is already in use.')
+        sb = get_supabase()
+        result = sb.table('users').select('id').eq('email', email.data).execute()
+        if result.data:
+            raise ValidationError('That email is already in use.')
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -25,6 +40,7 @@ class LoginForm(FlaskForm):
     remember = BooleanField('Remember Me')
     submit = SubmitField('Login')
 
+# Student Forms
 class OnboardingForm(FlaskForm):
     ambition = StringField('What is your learning ambition or career goal?', 
                            validators=[DataRequired()], 
@@ -34,53 +50,37 @@ class OnboardingForm(FlaskForm):
     reminder_time = TimeField('What time of day should we remind you to study?', 
                               format='%H:%M', 
                               validators=[DataRequired()])
-    submit = SubmitField('Generate My Roadmap with Kustor_AI')
+    submit = SubmitField('Generate My Roadmap with Autodidatic_AI')
 
+
+# Course Management Forms
 class CourseForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired(), Length(min=5, max=100)])
+    title = StringField('Title', validators=[DataRequired()])
     description = TextAreaField('Description', validators=[DataRequired()])
-    submit = SubmitField('Create Course')
+    submit = SubmitField('Save Course')
+
 
 class TextLessonForm(FlaskForm):
     title = StringField('Lesson Title', validators=[DataRequired()])
-    content = TextAreaField('Lesson Content', validators=[DataRequired()])
-    submit = SubmitField('Create Text Lesson')
+    content = TextAreaField('Content', validators=[DataRequired()])
+    submit = SubmitField('Save Lesson')
+
 
 class FileLessonForm(FlaskForm):
     title = StringField('Lesson Title', validators=[DataRequired()])
-    document = FileField('Lesson Document (PDF, DOC, DOCX)', validators=[DataRequired(), FileAllowed(['pdf', 'doc', 'docx'])])
+    file = FileField('Lesson File (PDF, DOCX)', 
+                    validators=[DataRequired(), FileAllowed(['pdf', 'docx', 'doc'])])
     submit = SubmitField('Upload File Lesson')
+
 
 class VideoLessonForm(FlaskForm):
     title = StringField('Lesson Title', validators=[DataRequired()])
-    video = FileField('Lesson Video (MP4, MOV)', validators=[DataRequired(), FileAllowed(['mp4', 'mov', 'avi'])])
+    video = FileField('Lesson Video (MP4)', 
+                     validators=[DataRequired(), FileAllowed(['mp4', 'mov', 'avi'])])
     submit = SubmitField('Upload Video Lesson')
+
 
 class YouTubeLessonForm(FlaskForm):
     title = StringField('Lesson Title', validators=[DataRequired()])
-    youtube_url = StringField('YouTube URL', validators=[DataRequired(), URL()])
+    youtube_id = StringField('YouTube Video ID (e.g., dQw4w9WgXcQ)', validators=[DataRequired()])
     submit = SubmitField('Add YouTube Lesson')
-
-class ModuleForm(FlaskForm):
-    title = StringField('Module Title', validators=[DataRequired()])
-    submit = SubmitField('Create Module')
-
-class AssignmentForm(FlaskForm):
-    title = StringField('Assignment Title', validators=[DataRequired()])
-    instructions = TextAreaField('Instructions', validators=[DataRequired()])
-    due_date = DateField('Due Date (Optional, Format: YYYY-MM-DD)', format='%Y-%m-%d', validators=[])
-    submit = SubmitField('Create Assignment')
-
-class PostForm(FlaskForm):
-    title = StringField('Title', validators=[DataRequired()])
-    content = TextAreaField('Content', validators=[DataRequired()])
-    submit = SubmitField('Create Post')
-
-class CommentForm(FlaskForm):
-    content = TextAreaField('Comment', validators=[DataRequired()])
-    submit = SubmitField('Submit')
-
-class GradingForm(FlaskForm):
-    grade = StringField('Grade (e.g., A+, 95%)', validators=[DataRequired()])
-    feedback = TextAreaField('Feedback')
-    submit = SubmitField('Submit Grade')

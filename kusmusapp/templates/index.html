@@ -1,27 +1,85 @@
 {% extends 'layout.html' %}
-
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<div class="p-5 mb-4 bg-body-tertiary rounded-3 text-center">
-    <div class="container-fluid py-5">
-      <h1 class="display-5 fw-bold">Kusmus Communications</h1>
-      <p class="fs-4">Welcome to the forefront of innovation. We build the future, today.</p>
+<section class="hero-section text-center" style="padding: 6rem 1rem; position: relative;">
+    <div class="hero-glow"></div>
+    <div style="max-width: 800px; margin: 0 auto;">
+        <h1 class="reveal-text reveal-delay-1"
+            style="font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 2rem; background: linear-gradient(135deg, #fff, #94a3b8); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+            Empowering Nigeria's Future, <br> Skill by Skill.
+        </h1>
+        <p class="reveal-text reveal-delay-2"
+            style="font-size: 1.25rem; color: var(--text-muted); margin-bottom: 3rem; max-width: 600px; margin-left: auto; margin-right: auto;">
+            ADC Academy is a core engine of the <strong>ADC Political Party Skill Nationwide Acquisition
+                Program</strong>. We equip Nigerian youths with globally sought-after skills across all
+            industries—bridging the gap to the global market.
+        </p>
+        <div class="reveal-text reveal-delay-3" style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{{ url_for('main.academy_landing') }}" class="btn btn-primary"
+                style="padding: 1rem 2rem; font-size: 1.1rem;">Explore Launch Academy</a>
+            <a href="{{ url_for('main.register') }}" class="btn"
+                style="padding: 1rem 2rem; font-size: 1.1rem; border: 1px solid var(--border-glass);">Join Our
+                Community</a>
+        </div>
+    </div>
+</section>
+
+<div class="row steps-grid">
+    <div class="card col-md-4">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🎯</div>
+        <h3>Our Mission</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">To leverage cutting-edge technology to create a
+            smarter, more connected, and more efficient world for everyone, starting with our local communities.</p>
+    </div>
+    <div class="card col-md-4">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🧠</div>
+        <h3>AI Innovation</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">From advanced AI educational tutors to robust data
+            analytics, we provide the tools to navigate and shape the digital landscape.</p>
+    </div>
+    <div class="card col-md-4">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;">🌍</div>
+        <h3>Our Purpose</h3>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">To drive mankind towards a brighter tomorrow. We
+            believe global progress begins with local innovation and nurturing exceptional talent.</p>
     </div>
 </div>
 
-<div class="row">
-    <div class="col-md-4">
-        <h2>About Us</h2>
-        <p>Kusmus Communications is a technology powerhouse dedicated to creating solutions that solve real-world problems. From advanced AI systems to robust data analytics, we are your partners in digital transformation.</p>
+<section class="academy-teaser card mt-4"
+    style="display: flex; align-items: center; justify-content: space-between; padding: 3rem; background: linear-gradient(rgba(30, 41, 59, 0.4), rgba(59, 130, 246, 0.1)); border: 1px solid rgba(59, 130, 246, 0.2);">
+    <div style="max-width: 50 percent;">
+        <span class="badge" style="margin-bottom: 1rem;">Featured Program</span>
+        <h2 style="font-size: 2.5rem;">Launch Academy</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Turn your ambition into reality with our student-led
+            AI roadmap system. Personalized curriculums for the next generation of tech leaders.</p>
+        <a href="{{ url_for('main.academy_landing') }}" class="btn btn-primary">Start Learning Now</a>
     </div>
-    <div class="col-md-4">
-        <h2>Our Mission</h2>
-        <p>To leverage cutting-edge technology to create a smarter, more connected, and more efficient world for everyone, starting with our communities at home.</p>
-    </div>
-    <div class="col-md-4">
-        <h2>Our Purpose</h2>
-        <p><strong>To Drive Mankind to the future starting from home.</strong> We believe that global progress begins with local innovation, and we are committed to nurturing talent and building technology that empowers our society.</p>
-    </div>
-</div>
+    <div style="font-size: 8rem; opacity: 0.5;">🎓</div>
+</section>
+
+<style>
+    .row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: -200px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 1000px;
+        height: 1000px;
+        background: radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%);
+        z-index: -1;
+    }
+</style>
 {% endblock %}

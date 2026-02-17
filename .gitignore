@@ -1,0 +1,191 @@
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+#  Usually these files are written by a python script across different platforms
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.cwd
+.pytest_cache/
+pytestdebug.log
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+.pybuilder/
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+#   For a library or binary, you wish to ignore these files naturally, but for
+#   an application, you might want to check them in.
+# .python-version
+
+# pipenv
+#   According to pypa/pipenv#598, it is recommended to check Pipfile.lock into source control.
+#   However, in case of collaboration, if having platform-specific dependencies or dependencies
+#   having no cross-platform support, pipenv may install dependencies that don't work, or even
+#   fail to install, on other platforms.
+#Pipfile.lock
+
+# poetry
+#   Similar to Pipfile.lock, it is generally recommended to check poetry.lock into source control.
+#poetry.lock
+
+# pdm
+#   Similar to Pipfile.lock, it is generally recommended to check pdm.lock into source control.
+#pdm.lock
+
+# PEP 582; used by e.g. github.com/pdm-project/pdm
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+Venv/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# Uploads
+kusmusapp/uploads/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# PyCharm
+#  JetBrains specific template is maintained in a separate repository (JetBrains.gitignore)
+#  and can be added to the global gitignore or merged into this file.  For a shared
+#  project, it is usually better not to include it in this file.
+#  .idea/
+
+# VS Code
+.vscode/
+
+# Sensitive credentials
+.env
+.env.local
+.env.*
+credentials.json
+*.pem
+*.key
+
+# Agent / AI Helper files
+.system_generated/
+.gemini/
+.antigravityignore
+brain/
+
+# Local databases
+*.db
+*.sqlite3
+
+# One-off / Internal Scripts
+apply_migration.py
+add_user_customization_columns.sql
+apply_schema.py
+api_test.py
+test_env.py
+reset_admin.py
+update_chat_schema.py
+init_db.py
+list_models.py
+generate_hash.py
+.env
+.env

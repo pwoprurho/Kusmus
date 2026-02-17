@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Our Team{% endblock %}
+{% block content %}
+<section class="text-center" style="padding: 4rem 1rem;">
+    <h1 class="nav-brand" style="font-size: 3.5rem; margin-bottom: 3rem;">Meet the Innovators</h1>
+
+    <div class="steps-grid">
+        <div class="card">
+            <div
+                style="width: 120px; height: 120px; background: var(--border-glass); border-radius: 50%; margin: 0 auto 1.5rem; overflow: hidden; border: 2px solid var(--primary);">
+                <img src="https://via.placeholder.com/120?text=CEO" alt="Founder"
+                    style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <h3>Oghenerurho</h3>
+            <p
+                style="color: var(--primary); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 1rem;">
+                Founder & Lead Architect</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">Visionary leader driving the integration of AI into
+                local communities. Spearheading the ADC Communications mission.</p>
+        </div>
+
+        <div class="card">
+            <div
+                style="width: 120px; height: 120px; background: var(--border-glass); border-radius: 50%; margin: 0 auto 1.5rem; overflow: hidden; border: 2px solid var(--primary);">
+                <img src="https://via.placeholder.com/120?text=Autodidatic" alt="AI"
+                    style="width: 100%; height: 100%; object-fit: cover;">
+            </div>
+            <h3>Autodidatic_AI</h3>
+            <p
+                style="color: var(--primary); font-weight: 700; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 1rem;">
+                AI Strategy & Education</p>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">The digital backbone of Launch Academy. Powered by
+                Gemini 2.0 to provide personalized education at scale.</p>
+        </div>
+    </div>
+</section>
+{% endblock %}

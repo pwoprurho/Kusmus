@@ -1,3 +1,51 @@
-<!DOCTYPE html>
-<html>
-<head>   
+{% extends "layout.html" %}
+{% block title %}About Us{% endblock %}
+{% block content %}
+<div style="max-width: 800px; margin: 3rem auto;">
+    <section class="text-center" style="padding: 4rem 1rem; position: relative;">
+        <div class="hero-glow"></div>
+        <div style="max-width: 800px; margin: 0 auto;">
+            <h1 class="reveal-text reveal-delay-1" style="font-size: 3.5rem; margin-bottom: 2rem;">About ADC Academy
+            </h1>
+            <p class="reveal-text reveal-delay-2"
+                style="font-size: 1.1rem; color: var(--text-muted); line-height: 1.8;">
+                ADC Academy is the premier tool for the <strong>ADC Political Party Skill Nationwide Acquisition
+                    Program</strong>.
+                We are dedicated to empowering Nigerian youths with the vocational, digital, and strategic skills needed
+                to dominate the global market.
+            </p>
+        </div>
+    </section>
+    <div style="color: var(--text-muted); line-height: 1.8;">
+        <p>Founded on the belief that the future of technology belongs to those who are bold enough to build it from
+            their own backyards, we focus on high-impact AI solutions and educational systems that empower
+            individuals.</p>
+        <p class="mt-4">Our "Autodidactic Training Campaigns" (ADC) are designed to bridge the gap between curiosity
+            and mastery, providing students with the roadmap they need to navigate the fast-evolving tech landscape.
+        </p>
+    </div>
+
+    <div class="mt-4"
+        style="padding: 2rem; background: rgba(59, 130, 246, 0.05); border-radius: 1rem; border: 1px solid var(--border-glass);">
+        <h3 style="color: var(--primary);">Our Values</h3>
+        <ul style="list-style: none; padding: 0; margin-top: 1rem;">
+            <li style="margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="color: var(--primary); font-weight: bold;">01.</span>
+                <span><strong>Home-Based Foundations:</strong> We believe world-class innovation starts at the local
+                    level.</span>
+            </li>
+            <li style="margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="color: var(--primary); font-weight: bold;">02.</span>
+                <span><strong>AI-First Learning:</strong> Leveraging the power of LLMs to personalize education for
+                    everyone.</span>
+            </li>
+            <li style="margin-bottom: 1rem; display: flex; align-items: flex-start; gap: 0.75rem;">
+                <span style="color: var(--primary); font-weight: bold;">03.</span>
+                <span><strong>Relentless Execution:</strong> Transforming ideas into functional, production-ready
+                    reality.</span>
+            </li>
+        </ul>
+    </div>
+</div>
+</div>
+{% endblock %}

@@ -1,14 +1,116 @@
 {% extends "layout.html" %}
 {% block content %}
-    <a href="{{ url_for('main.course_detail', course_id=course.id) }}">&laquo; Back to Course</a>
-    <hr>
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset>
-            <legend>Add YouTube Lesson to {{ course.title }}</legend>
-            {{ form.title.label }}<br>{{ form.title(size=50) }}<br><br>
-            {{ form.youtube_url.label }}<br>{{ form.youtube_url(size=50) }}<br><br>
-            {{ form.submit() }}
-        </fieldset>
-    </form>
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .glass-form-card {
+        background: rgba(30, 30, 50, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 2.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #7c3aed;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-title {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+        background: linear-gradient(135deg, #fff, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 1.5rem;
+    }
+
+    .back-link:hover {
+        color: white;
+    }
+</style>
+
+<div class="form-container">
+    <a href="{{ url_for('main.course_detail', course_id=course.id) }}" class="back-link">
+        ← Back to {{ course.title }}
+    </a>
+
+    <div class="glass-form-card">
+        <h2 class="form-title">Add YouTube Lesson</h2>
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control", placeholder="Lesson Title") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.youtube_url.label(class="form-label") }}
+                {{ form.youtube_url(class="form-control", placeholder="Paste YouTube Link or ID") }}
+            </div>
+
+            <div class="form-group" style="margin-top: 2rem;">
+                {{ form.submit(class="btn-submit") }}
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock content %}

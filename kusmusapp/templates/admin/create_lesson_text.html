@@ -1,14 +1,131 @@
 {% extends "layout.html" %}
 {% block content %}
-    <a href="{{ url_for('main.course_detail', course_id=course.id) }}">&laquo; Back to Course</a>
-    <hr>
-    <form method="POST" action="">
-        {{ form.hidden_tag() }}
-        <fieldset>
-            <legend>Add Text Lesson to {{ course.title }}</legend>
-            {{ form.title.label }}<br>{{ form.title(size=50) }}<br><br>
-            {{ form.content.label }}<br>{{ form.content(rows=15, cols=80) }}<br><br>
-            {{ form.submit() }}
-        </fieldset>
-    </form>
+<style>
+    .form-container {
+        max-width: 800px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .glass-form-card {
+        background: rgba(30, 30, 50, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 2.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+        font-family: inherit;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #7c3aed;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+    }
+
+    .form-title {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+        background: linear-gradient(135deg, #fff, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        margin-bottom: 1.5rem;
+    }
+
+    .back-link:hover {
+        color: white;
+    }
+
+    /* Specific for Text Area in Lesson */
+    textarea.form-control {
+        line-height: 1.6;
+        resize: vertical;
+        min-height: 300px;
+    }
+</style>
+
+<div class="form-container">
+    <a href="{{ url_for('main.course_detail', course_id=course.id) }}" class="back-link">
+        ← Back to {{ course.title }}
+    </a>
+
+    <div class="glass-form-card">
+        {% if view_only %}
+        <h1 class="form-title" style="text-align: left; font-size: 2rem;">{{ lesson.title }}</h1>
+        <div
+            style="background: rgba(255,255,255,0.03); padding: 2rem; border-radius: 12px; line-height: 1.8; font-size: 1.05rem; white-space: pre-wrap;">
+            {{ lesson.content|safe }}</div>
+        {% else %}
+        <h2 class="form-title">{{ title }}</h2>
+        <form method="POST" action="">
+            {{ form.hidden_tag() }}
+
+            <div class="form-group">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control", placeholder="Lesson Title") }}
+            </div>
+
+            <div class="form-group">
+                {{ form.content.label(class="form-label") }}
+                {{ form.content(class="form-control", placeholder="Write your lesson content here...") }}
+            </div>
+
+            <div class="form-group" style="margin-top: 2rem;">
+                {{ form.submit(class="btn-submit") }}
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
 {% endblock content %}

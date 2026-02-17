@@ -1,48 +1,42 @@
 import os
 from dotenv import load_dotenv
 from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from flask_socketio import SocketIO
 
 # Load environment variables from .env file
-load_dotenv()
+basedir = os.path.abspath(os.path.dirname(__file__))
+load_dotenv(os.path.join(os.path.dirname(basedir), '.env'))
 
-# --- CREATE EXTENSIONS ---
-db = SQLAlchemy()
-migrate = Migrate()
+# Create extension instances without an app
 bcrypt = Bcrypt()
 login_manager = LoginManager()
-
-# This wildcard is the most robust setting for Codespaces
-socketio = SocketIO(cors_allowed_origins="*") # <-- THIS IS THE FIX
+socketio = SocketIO()
 
 login_manager.login_view = 'main.login'
 login_manager.login_message_category = 'info'
 
 def create_app():
-    """Application Factory Function"""
-    app = Flask(__name__)
-    
     # --- APP CONFIGURATION ---
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(os.path.abspath(os.path.dirname(__name__)), 'kusmus.db')
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a-default-secret-key')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'a-very-secret-and-secure-key-for-production')
+    app.config['SUPABASE_URL'] = os.getenv('SUPABASE_URL')
+    app.config['SUPABASE_KEY'] = os.getenv('SUPABASE_KEY')
 
     # --- INITIALIZE EXTENSIONS WITH THE APP ---
-    db.init_app(app)
-    migrate.init_app(app, db)
     bcrypt.init_app(app)
     login_manager.init_app(app)
     socketio.init_app(app)
 
-    # --- REGISTER BLUEPRINTS & ROUTES ---
+    # --- REGISTER BLUEPRINTS ---
     from kusmusapp.routes import main as main_blueprint
     app.register_blueprint(main_blueprint)
 
-    # Import socket events to register them
+    # Import models to register the user_loader with login_manager
+    from . import models
+
+    # Import socket events after app is created to avoid circular imports
     from . import sockets
 
     return app

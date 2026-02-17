@@ -1,59 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ title or 'Kusmus Platform' }}</title>
-    
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
-    
+    <title>{{ title or 'ADC Launch Academy' }}</title>
+    <!-- Modern Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/chat_bg.png') }}">
+    <style>
+        /* Flash message transition */
+        .fade-out {
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+    </style>
 </head>
+
 <body>
+    <div id="canvas-container"></div>
+
+    <div class="loader-wrapper" id="loader">
+        <div class="loader-content">
+            <h1 class="nav-brand" style="margin-bottom: 1rem;">ADC Academy</h1>
+            <p style="color: var(--text-muted);">ADC correcting the Timeline...</p>
+        </div>
+    </div>
+
     <header>
         <nav>
-            <a href="{{ url_for('main.home') }}">Kusmus Communications</a> |
-            <a href="{{ url_for('main.about') }}">About</a> |
-            <a href="{{ url_for('main.team') }}">Our Team</a> |
-            <a href="{{ url_for('main.consult') }}">Consultation</a> |
-            <a href="{{ url_for('main.academy_landing') }}" style="font-weight: bold;">Launch Academy</a>
-            
-            <div style="float: right;">
+            <div class="nav-brand">
+                <a href="{{ url_for('main.home') }}" style="color: inherit;">ADC Academy</a>
+            </div>
+            <div class="nav-links">
+                <a href="{{ url_for('main.home') }}">Home</a>
+                <a href="{{ url_for('main.academy_landing') }}">Academy</a>
                 {% if current_user.is_authenticated %}
-                    <a href="{{ url_for('main.dashboard') }}">Dashboard</a> |
-                    <a href="{{ url_for('main.course_catalog') }}">Courses</a> |
-                    <a href="{{ url_for('main.notebook') }}">Notebook</a> |
-                    <a href="{{ url_for('main.community') }}">Community</a> |
-                    <a href="{{ url_for('main.messages') }}">Messages</a> |
-                    <a href="{{ url_for('main.logout') }}">Logout</a>
+                <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
+                {% if current_user.role == 'admin' %}
+                <a href="{{ url_for('main.ai_tutor') }}">AI Tutor</a>
+                {% endif %}
+                <a href="{{ url_for('main.logout') }}" class="btn btn-primary"
+                    style="padding: 0.5rem 1rem; color: white;">Logout</a>
                 {% else %}
-                    <a href="{{ url_for('main.login') }}">Login</a> | <a href="{{ url_for('main.register') }}">Register</a>
+                <a href="{{ url_for('main.login') }}">Login</a>
+                <a href="{{ url_for('main.register') }}" class="btn btn-primary"
+                    style="padding: 0.5rem 1rem; color: white;">Register</a>
                 {% endif %}
             </div>
         </nav>
     </header>
-    <hr>
+
     <main>
         {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            {% for category, message in messages %}
-              <div class="alert-{{ category }}">
-                {{ message }}
-              </div>
-            {% endfor %}
-          {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
+
         {% block content %}{% endblock %}
     </main>
-    <hr>
+
     <footer>
-        <p>&copy; 2025 Kusmus Platform. All rights reserved.</p>
+        <p>&copy; 2025 Kusmus AI @ kusmus.org. Serving the ADC Political Party Skill Nationwide Acquisition Program.</p>
     </footer>
 
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> {% block scripts %}{% endblock %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="{{ url_for('static', filename='js/three-bg.js') }}"></script>
+    <script>
+        window.addEventListener('load', () => {
+            const loader = document.getElementById('loader');
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => loader.style.visibility = 'hidden', 800);
+            }, 1000);
+        });
+
+        // Auto-hide alert messages
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(a => a.style.display = 'none');
+        }, 5000);
+    </script>
 </body>
+
+
+
 </html>

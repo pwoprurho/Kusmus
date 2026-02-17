@@ -1,30 +1,118 @@
 {% extends "layout.html" %}
 {% block content %}
-    <div>
+<style>
+    .form-container {
+        max-width: 600px;
+        margin: 3rem auto;
+        padding: 0 1rem;
+    }
+
+    .glass-form-card {
+        background: rgba(30, 30, 50, 0.7);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 2.5rem;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #7c3aed;
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.2);
+    }
+
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+    }
+
+    .form-title {
+        text-align: center;
+        margin-bottom: 2rem;
+        font-size: 1.8rem;
+        background: linear-gradient(135deg, #fff, #a78bfa);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .error-msg {
+        color: #f87171;
+        font-size: 0.85rem;
+        margin-top: 5px;
+        display: block;
+    }
+</style>
+
+<div class="form-container">
+    <div class="glass-form-card">
+        <h2 class="form-title">{{ legend }}</h2>
         <form method="POST" action="">
             {{ form.hidden_tag() }}
-            <fieldset>
-                <legend>{{ legend }}</legend>
-                <div>
-                    {{ form.title.label }}<br>
-                    {{ form.title(size=50) }}<br>
-                    {% for error in form.title.errors %}
-                        <small style="color: red;">{{ error }}</small><br>
-                    {% endfor %}
-                </div>
-                <br>
-                <div>
-                    {{ form.description.label }}<br>
-                    {{ form.description(rows=5, cols=50) }}<br>
-                    {% for error in form.description.errors %}
-                        <small style="color: red;">{{ error }}</small><br>
-                    {% endfor %}
-                </div>
-            </fieldset>
-            <br>
-            <div>
-                {{ form.submit() }}
+
+            <div class="form-group">
+                {{ form.title.label(class="form-label") }}
+                {{ form.title(class="form-control", placeholder="Enter course title") }}
+                {% for error in form.title.errors %}
+                <span class="error-msg">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group">
+                {{ form.description.label(class="form-label") }}
+                {{ form.description(class="form-control", rows=5, placeholder="Enter course description") }}
+                {% for error in form.description.errors %}
+                <span class="error-msg">{{ error }}</span>
+                {% endfor %}
+            </div>
+
+            <div class="form-group" style="margin-top: 2rem;">
+                {{ form.submit(class="btn-submit") }}
+            </div>
+
+            <div style="text-align: center; margin-top: 1.5rem;">
+                <a href="{{ url_for('main.dashboard') }}"
+                    style="color: var(--text-muted); text-decoration: none; font-size: 0.9rem;">Cancel</a>
             </div>
         </form>
     </div>
+</div>
 {% endblock content %}

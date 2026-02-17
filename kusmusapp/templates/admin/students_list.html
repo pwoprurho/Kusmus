@@ -1,0 +1,151 @@
+{% extends "layout.html" %}
+{% block content %}
+<style>
+    .students-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 1rem;
+    }
+
+    .search-bar {
+        width: 100%;
+        padding: 0.75rem 1.25rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(30, 30, 50, 0.7);
+        color: var(--text-main, #fff);
+        font-size: 0.95rem;
+        backdrop-filter: blur(10px);
+        outline: none;
+        margin-bottom: 1.5rem;
+    }
+
+    .search-bar:focus {
+        border-color: #7c3aed;
+    }
+
+    .search-bar::placeholder {
+        color: var(--text-muted, #888);
+    }
+
+    .student-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+
+    .student-table thead th {
+        background: rgba(59, 130, 246, 0.15);
+        color: var(--text-main, #fff);
+        padding: 0.85rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .student-table tbody td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-muted, #aaa);
+    }
+
+    .student-table tbody tr:hover {
+        background: rgba(59, 130, 246, 0.08);
+    }
+
+    .table-card {
+        background: var(--card-bg, rgba(30, 30, 50, 0.7));
+        border: 1px solid var(--border-glass, rgba(255, 255, 255, 0.08));
+        border-radius: 16px;
+        overflow: hidden;
+        backdrop-filter: blur(10px);
+    }
+
+    .stat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(124, 58, 237, 0.15);
+        color: #a78bfa;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .back-link {
+        color: #818cf8;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 1rem;
+    }
+
+    .back-link:hover {
+        color: #a78bfa;
+    }
+</style>
+
+<div class="students-container">
+    <a href="{{ url_for('main.dashboard') }}" class="back-link">← Back to Dashboard</a>
+
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+        <h1 style="margin: 0; font-size: 1.8rem;">👤 Registered Students</h1>
+        <span class="stat-pill">{{ students|length }} Total</span>
+    </div>
+
+    <input type="text" class="search-bar" id="studentSearch" placeholder="🔍 Search by name, email, state, or LGA...">
+
+    <div class="table-card">
+        <table class="student-table" id="studentsTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>State</th>
+                    <th>LGA</th>
+                    <th>Age</th>
+                    <th>Gender</th>
+                    <th>Streak 🔥</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td><strong style="color: var(--text-main, #fff);">{{ s.full_name or s.username }}</strong></td>
+                    <td>{{ s.email }}</td>
+                    <td>{{ s.state or '—' }}</td>
+                    <td>{{ s.lga or '—' }}</td>
+                    <td>{{ s.age or '—' }}</td>
+                    <td>{{ s.gender or '—' }}</td>
+                    <td>{{ s.streak or 0 }}</td>
+                </tr>
+                {% endfor %}
+                {% if not students %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 3rem; font-size: 1rem;">No students registered
+                        yet.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('studentSearch').addEventListener('input', function () {
+        const query = this.value.toLowerCase();
+        const rows = document.querySelectorAll('#studentsTable tbody tr');
+        rows.forEach(row => {
+            row.style.display = row.textContent.toLowerCase().includes(query) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock content %}
