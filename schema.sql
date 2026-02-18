@@ -35,9 +35,16 @@ CREATE TABLE IF NOT EXISTS public.users (
     avatar_url TEXT,
     wallpaper_url TEXT,
     is_admin BOOLEAN DEFAULT FALSE,
+    last_activity_date DATE,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     last_login TIMESTAMPTZ
 );
+
+-- Ensure columns exist even if table was already created
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS phone_number TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS wallpaper_url TEXT;
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS last_activity_date DATE;
 
 -- COURSES TABLE
 CREATE TABLE IF NOT EXISTS public.courses (
@@ -139,19 +146,39 @@ ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscribers ENABLE ROW LEVEL SECURITY;
 
 -- POLICIES for USERS
+DROP POLICY IF EXISTS "Allow public registration" ON public.users;
 CREATE POLICY "Allow public registration" ON public.users FOR INSERT WITH CHECK (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access users" ON public.users;
 CREATE POLICY "Allow backend access users" ON public.users FOR ALL USING (TRUE);
 
 -- POLICIES for OTHER TABLES
+DROP POLICY IF EXISTS "Allow backend access courses" ON public.courses;
 CREATE POLICY "Allow backend access courses" ON public.courses FOR ALL USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access lessons" ON public.lessons;
 CREATE POLICY "Allow backend access lessons" ON public.lessons FOR ALL USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access roadmaps" ON public.generated_roadmaps;
 CREATE POLICY "Allow backend access roadmaps" ON public.generated_roadmaps FOR ALL USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access steps" ON public.roadmap_steps;
 CREATE POLICY "Allow backend access steps" ON public.roadmap_steps FOR ALL USING (TRUE);
+
 -- POLICY: Chat Sessions
+DROP POLICY IF EXISTS "Allow backend access chat_sessions" ON public.chat_sessions;
 CREATE POLICY "Allow backend access chat_sessions" ON public.chat_sessions FOR ALL USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access chat" ON public.chat_messages;
 CREATE POLICY "Allow backend access chat" ON public.chat_messages FOR ALL USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access messages" ON public.messages;
 CREATE POLICY "Allow backend access messages" ON public.messages FOR ALL USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access blog" ON public.blog_posts;
 CREATE POLICY "Allow backend access blog" ON public.blog_posts FOR ALL USING (TRUE);
+
+DROP POLICY IF EXISTS "Allow backend access subscribers" ON public.subscribers;
 CREATE POLICY "Allow backend access subscribers" ON public.subscribers FOR ALL USING (TRUE);
 
 -- --- 4. VIEWS & INDEXES ---

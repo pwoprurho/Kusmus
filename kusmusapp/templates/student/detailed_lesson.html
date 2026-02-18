@@ -1,0 +1,197 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="lesson-view-container">
+    <header class="lesson-header card">
+        <div class="header-content">
+            <a href="{{ url_for('main.dashboard') }}" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <div class="title-section" style="margin-top: 1.5rem;">
+                <span class="badge">AI-Generated Lesson</span>
+                <h1
+                    style="margin: 0.5rem 0; font-size: 2.5rem; background: linear-gradient(135deg, var(--text-main) 0%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                    {{ step.title }}
+                </h1>
+                <p style="color: var(--text-muted);">Step {{ step.step_number }} of your roadmap</p>
+            </div>
+        </div>
+
+        {% if step.audio_url %}
+        <div class="audio-strip">
+            <div class="audio-info">
+                <i class="fas fa-volume-up"></i>
+                <span>Listen to the AI Tutor</span>
+            </div>
+            <audio controls style="height: 36px;">
+                <source src="{{ url_for('main.uploaded_file', subfolder='audio', filename=step.audio_url) }}"
+                    type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        {% endif %}
+    </header>
+
+    <article class="lesson-content card">
+        <div id="markdown-content" class="markdown-body">
+            {{ step.lecture_content }}
+        </div>
+    </article>
+
+    <footer class="lesson-footer">
+        <div class="card completion-card">
+            <h3>Lesson Finished?</h3>
+            <p>Ready to move forward or need to revisit some concepts?</p>
+            <div style="display: flex; gap: 1rem; margin-top: 1.5rem;">
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-primary" style="padding: 1rem 2rem;">Mark as
+                    Completed</a>
+                <a href="{{ url_for('main.ai_tutor') }}" class="btn"
+                    style="border: 1px solid var(--border-glass); padding: 1rem 2rem;">
+                    <i class="fas fa-robot"></i> Ask AI Tutor a Question
+                </a>
+            </div>
+        </div>
+    </footer>
+</div>
+
+<!-- Marked.js for Markdown rendering -->
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const contentDiv = document.getElementById('markdown-content');
+        const rawText = contentDiv.innerText;
+        contentDiv.innerHTML = marked.parse(rawText);
+        contentDiv.style.opacity = '1';
+    });
+</script>
+
+<style>
+    .lesson-view-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding-bottom: 4rem;
+    }
+
+    .lesson-header {
+        margin-bottom: 2rem;
+        padding: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .back-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: color 0.3s;
+    }
+
+    .back-link:hover {
+        color: var(--primary);
+    }
+
+    .audio-strip {
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-glass);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .audio-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .lesson-content {
+        padding: 3rem;
+        line-height: 1.8;
+        font-size: 1.1rem;
+        margin-bottom: 2rem;
+    }
+
+    .markdown-body {
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        color: var(--text-main);
+    }
+
+    /* Markdown Styling */
+    .markdown-body h1,
+    .markdown-body h2,
+    .markdown-body h3 {
+        color: var(--text-main);
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .markdown-body h2 {
+        border-bottom: 1px solid var(--border-glass);
+        padding-bottom: 0.5rem;
+    }
+
+    .markdown-body p {
+        margin-bottom: 1.5rem;
+    }
+
+    .markdown-body ul,
+    .markdown-body ol {
+        margin-bottom: 1.5rem;
+        padding-left: 2rem;
+    }
+
+    .markdown-body blockquote {
+        border-left: 4px solid var(--primary);
+        padding: 1rem 1.5rem;
+        background: rgba(255, 255, 255, 0.03);
+        margin: 2rem 0;
+        border-radius: 0 0.5rem 0.5rem 0;
+        font-style: italic;
+    }
+
+    .markdown-body pre {
+        background: #111827;
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        overflow-x: auto;
+        margin: 2rem 0;
+        border: 1px solid var(--border-glass);
+    }
+
+    .markdown-body code {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 0.2rem 0.4rem;
+        border-radius: 0.3rem;
+        font-family: 'Fira Code', monospace;
+        font-size: 0.9em;
+    }
+
+    .markdown-body pre code {
+        background: transparent;
+        padding: 0;
+    }
+
+    .completion-card {
+        padding: 2.5rem;
+        text-align: center;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+    }
+
+    @media (max-width: 600px) {
+        .lesson-content {
+            padding: 1.5rem;
+        }
+    }
+</style>
+{% endblock content %}

@@ -100,17 +100,11 @@
 
             <div class="step-actions">
                 {% if step.lecture_content %}
-                <details class="lecture-details">
-                    <summary class="btn"
-                        style="border: 1px solid var(--border-glass); width: 100%; justify-content: space-between; display: flex;">
-                        <span>📖 Read AI Lecture</span>
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                            </path>
-                        </svg>
-                    </summary>
-                    <div class="lecture-body">{{ step.lecture_content|safe }}</div>
-                </details>
+                <a href="{{ url_for('main.view_step_lesson', step_id=step.id) }}" class="btn"
+                    style="border: 1px solid var(--border-glass); width: 100%; justify-content: space-between; display: flex; text-decoration: none; margin-bottom: 0.5rem;">
+                    <span>📖 Read AI Lesson</span>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
 
                 {% if step.audio_url %}
                 <div class="audio-player">

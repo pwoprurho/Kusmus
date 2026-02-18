@@ -111,14 +111,22 @@ class AIService:
             return f"Mock Lecture for {title}: {description} (AI not configured)"
             
         prompt = f"""
-        Write a comprehensive, engaging educational lecture for the topic: '{title}'.
+        Act as a world-class educational tutor. Your goal is to write a highly detailed, engaging, and "easy to learn" lesson for the topic: '{title}'.
         Context: {description}.
-        Structure:
-        1. Introduction
-        2. Key Concepts (explain in detail)
-        3. Real-world Examples
-        4. Summary
-        Format using Markdown.
+
+        The lesson must be comprehensive and follow this structure:
+        1. **Title**: A catchy and clear title.
+        2. **Introduction**: Explain what the student will learn and why it's important.
+        3. **Detailed Breakdown**: Deep dive into the core concepts. Use sub-headings and bullet points for clarity.
+        4. **Step-by-Step Examples**: Provide clear, practical examples of the concepts in action.
+        5. **Pro Tips**: Add subtle, advanced advice or common pitfalls to avoid.
+        6. **Summary**: A concise wrap-up of the main points.
+        7. **Knowledge Check (Test)**: 
+            - 3-5 Multiple choice or short-answer questions based on the lesson content.
+            - Provide the correct answers clearly at the very end.
+
+        Tone: Encouraging, professional, and clear.
+        Format: Use Markdown for all formatting (headings, bold, lists, etc.).
         """
         try:
             response = self._generate_with_retry(prompt)

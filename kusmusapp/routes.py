@@ -310,6 +310,36 @@ def dashboard():
                                total_students=total_students, total_courses=total_courses)
 
     # Student dashboard
+    # --- Daily Streak Logic ---
+    today = datetime.utcnow().date()
+    # current_user.last_activity_date is a string from Supabase ('YYYY-MM-DD')
+    last_date = None
+    if current_user.last_activity_date:
+        if isinstance(current_user.last_activity_date, str):
+            last_date = datetime.strptime(current_user.last_activity_date, '%Y-%m-%d').date()
+        else:
+            last_date = current_user.last_activity_date
+
+    if not last_date:
+        # First visit or old user without date
+        current_user.streak = 1
+        current_user.last_activity_date = today
+        sb.table('users').update({'streak': 1, 'last_activity_date': today.isoformat()}).eq('id', current_user.id).execute()
+    elif last_date < today:
+        if last_date == today - timedelta(days=1):
+            # Consecutive day!
+            current_user.streak += 1
+        else:
+            # Missed a day or more
+            current_user.streak = 1
+        
+        current_user.last_activity_date = today
+        sb.table('users').update({
+            'streak': current_user.streak, 
+            'last_activity_date': today.isoformat()
+        }).eq('id', current_user.id).execute()
+    # If last_date == today, we do nothing (already updated today)
+
     roadmap = None
     result = sb.table('generated_roadmaps').select('*').eq('user_id', current_user.id).order('date_created', desc=True).limit(1).execute()
     if result.data:
@@ -780,7 +810,36 @@ def generate_step_lecture(step_id):
     sb.table('roadmap_steps').update(update_data).eq('id', step_id).execute()
 
     flash('Lecture and audio generated successfully!', 'success')
-    return redirect(url_for('main.dashboard'))
+    return redirect(url_for('main.view_step_lesson', step_id=step_id))
+
+
+@main.route('/roadmap/step/<int:step_id>/lesson')
+@login_required
+def view_step_lesson(step_id):
+    """View the detailed AI-generated lesson for a roadmap step."""
+    sb = get_supabase()
+
+    # Get the step
+    step_result = sb.table('roadmap_steps').select('*').eq('id', step_id).single().execute()
+    if not step_result.data:
+        abort(404)
+    step_data = step_result.data
+
+    # Verify ownership
+    roadmap_result = sb.table('generated_roadmaps').select('user_id').eq('id', step_data['roadmap_id']).single().execute()
+    if not roadmap_result.data or roadmap_result.data['user_id'] != current_user.id:
+        abort(403)
+
+    if not step_data['lecture_content']:
+        flash('Please generate the lesson first.', 'warning')
+        return redirect(url_for('main.dashboard'))
+
+    # Conver dict to a helper object or just use as is in template
+    # Since Template uses step.title, we'll keep it as dict or use a simple class
+    from .models import RoadmapStep
+    step = RoadmapStep.from_dict(step_data)
+
+    return render_template('student/detailed_lesson.html', title=step.title, step=step)
 
 
 @main.route('/roadmap/<int:roadmap_id>/download_schedule')

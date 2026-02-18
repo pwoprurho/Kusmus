@@ -33,7 +33,7 @@ class User(UserMixin):
     def __init__(self, id=None, username='', email='', password='', role='student',
                  streak=1, study_reminder_time=None, daily_study_hours=None,
                   full_name='', phone_number='', state='', lga='', gender='', age=None, is_admin=False,
-                  avatar_url=None, wallpaper_url=None):
+                  avatar_url=None, wallpaper_url=None, last_activity_date=None):
         self.id = id
         self.username = username
         self.email = email
@@ -51,6 +51,7 @@ class User(UserMixin):
         self.is_admin = is_admin
         self.avatar_url = avatar_url
         self.wallpaper_url = wallpaper_url
+        self.last_activity_date = last_activity_date
 
     @classmethod
     def from_dict(cls, data):
@@ -72,6 +73,7 @@ class User(UserMixin):
             is_admin=data.get('is_admin', False),
             avatar_url=data.get('avatar_url'),
             wallpaper_url=data.get('wallpaper_url'),
+            last_activity_date=data.get('last_activity_date'),
         )
 
     def set_password(self, password_to_hash):
